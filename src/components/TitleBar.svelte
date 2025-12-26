@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { appWindow } from '@tauri-apps/api/window';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
+
+  const appWindow = getCurrentWindow();
 
   async function minimize() {
     await appWindow.minimize();
