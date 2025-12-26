@@ -1,0 +1,1 @@
+Lightweight notepad with scroll through each day of notes. Notepad has room for paragraph long notes. Has a small chat window with Ollama LLM model. Helps you format notes or extrapolate a short note. minimizes to an icon next to the time. 
