@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body {
+    @apply m-0 p-0 overflow-hidden select-none;
+    min-height: 100vh;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-light-border dark:bg-dark-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-light-text-secondary dark:bg-dark-text-secondary;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-150;
+  }
+
+  .btn-primary {
+    @apply bg-light-primary dark:bg-dark-primary text-white;
+    @apply hover:opacity-90 active:opacity-80;
+  }
+
+  .btn-secondary {
+    @apply bg-light-surface dark:bg-dark-surface;
+    @apply border border-light-border dark:border-dark-border;
+    @apply hover:bg-light-border dark:hover:bg-dark-border;
+  }
+
+  .input {
+    @apply w-full px-3 py-2 rounded-md;
+    @apply bg-light-bg dark:bg-dark-bg;
+    @apply border border-light-border dark:border-dark-border;
+    @apply focus:outline-none focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary;
+    @apply placeholder-light-text-secondary dark:placeholder-dark-text-secondary;
+  }
+
+  .card {
+    @apply bg-light-surface dark:bg-dark-surface;
+    @apply border border-light-border dark:border-dark-border;
+    @apply rounded-lg p-4;
+  }
+}
+
+@layer utilities {
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
