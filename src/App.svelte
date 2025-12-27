@@ -13,19 +13,12 @@
 
   onMount(() => {
     initializeTheme();
+    // Force dark mode for earth tones
+    document.documentElement.classList.add('dark');
   });
-
-  // Apply theme class to document
-  $: {
-    if ($effectiveTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }
 </script>
 
-<div class="h-screen flex flex-col bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+<div class="h-screen flex flex-col bg-earth-900 text-earth-100 overflow-hidden">
   <!-- Title Bar -->
   <TitleBar />
 
@@ -33,7 +26,7 @@
   <DateNav />
 
   <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col overflow-hidden p-2 gap-2">
+  <div class="flex-1 flex flex-col overflow-hidden p-3 gap-3">
     <!-- Notes List -->
     <NotesList />
 

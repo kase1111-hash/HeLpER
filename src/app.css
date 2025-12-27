@@ -3,19 +3,24 @@
 @tailwind utilities;
 
 @layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
   html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     @apply m-0 p-0 overflow-hidden select-none;
+    @apply bg-earth-900 text-earth-100;
     min-height: 100vh;
   }
 
-  /* Scrollbar styling */
+  /* Sleek scrollbar styling */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -23,42 +28,107 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-light-border dark:bg-dark-border rounded-full;
+    @apply bg-earth-500 rounded-full;
+    transition: background-color 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-light-text-secondary dark:bg-dark-text-secondary;
+    @apply bg-earth-400;
+  }
+
+  /* Custom selection color */
+  ::selection {
+    @apply bg-accent/30 text-earth-50;
   }
 }
 
 @layer components {
+  /* Sleek button styles */
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors duration-150;
+    @apply px-4 py-2 rounded-sleek font-medium;
+    @apply transition-all duration-200 ease-out;
+    @apply shadow-subtle;
   }
 
   .btn-primary {
-    @apply bg-light-primary dark:bg-dark-primary text-white;
-    @apply hover:opacity-90 active:opacity-80;
+    @apply bg-gradient-to-b from-accent to-accent-warm;
+    @apply text-earth-900 font-semibold;
+    @apply hover:from-accent-light hover:to-accent;
+    @apply active:scale-[0.98] active:shadow-none;
+    @apply shadow-glow;
   }
 
   .btn-secondary {
-    @apply bg-light-surface dark:bg-dark-surface;
-    @apply border border-light-border dark:border-dark-border;
-    @apply hover:bg-light-border dark:hover:bg-dark-border;
+    @apply bg-earth-600 text-earth-100;
+    @apply border border-earth-500;
+    @apply hover:bg-earth-500 hover:border-earth-400;
+    @apply active:scale-[0.98];
   }
 
+  .btn-ghost {
+    @apply bg-transparent text-earth-200;
+    @apply hover:bg-earth-700 hover:text-earth-100;
+    @apply active:bg-earth-600;
+    box-shadow: none;
+  }
+
+  /* Sleek input styles */
   .input {
-    @apply w-full px-3 py-2 rounded-md;
-    @apply bg-light-bg dark:bg-dark-bg;
-    @apply border border-light-border dark:border-dark-border;
-    @apply focus:outline-none focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary;
-    @apply placeholder-light-text-secondary dark:placeholder-dark-text-secondary;
+    @apply w-full px-3 py-2.5 rounded-sleek;
+    @apply bg-earth-800 text-earth-100;
+    @apply border border-earth-500;
+    @apply placeholder-earth-400;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30;
+    @apply shadow-inner-light;
   }
 
+  .input:hover:not(:focus) {
+    @apply border-earth-400;
+  }
+
+  /* Sleek card styles */
   .card {
-    @apply bg-light-surface dark:bg-dark-surface;
-    @apply border border-light-border dark:border-dark-border;
-    @apply rounded-lg p-4;
+    @apply bg-earth-700 rounded-sleek p-4;
+    @apply border border-earth-500/50;
+    @apply shadow-card;
+    @apply transition-all duration-200;
+  }
+
+  .card-elevated {
+    @apply bg-earth-600 rounded-sleek p-4;
+    @apply border border-earth-400/30;
+    @apply shadow-elevated;
+  }
+
+  /* Sleek panel header */
+  .panel-header {
+    @apply flex items-center justify-between;
+    @apply px-4 py-3;
+    @apply bg-earth-800 border-b border-earth-600;
+  }
+
+  /* Status indicator */
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+    @apply shadow-[0_0_6px_currentColor];
+  }
+
+  .status-dot-online {
+    @apply bg-success text-success;
+  }
+
+  .status-dot-offline {
+    @apply bg-earth-400 text-earth-400;
+  }
+
+  .status-dot-error {
+    @apply bg-error text-error;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-gradient-to-r from-transparent via-earth-500 to-transparent;
   }
 }
 
@@ -69,5 +139,20 @@
 
   .no-drag {
     -webkit-app-region: no-drag;
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-accent to-accent-light bg-clip-text text-transparent;
+  }
+
+  /* Subtle hover effect */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-earth-800/80 backdrop-blur-sm;
   }
 }
