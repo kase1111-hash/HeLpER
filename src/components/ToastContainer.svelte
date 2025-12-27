@@ -2,19 +2,14 @@
   import { toasts, dismissToast } from '../lib/stores/ui';
 </script>
 
-<div class="fixed bottom-16 right-4 z-50 space-y-2">
+<div class="fixed bottom-14 right-4 z-50 space-y-2">
   {#each $toasts as toast (toast.id)}
     <div
-      class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg max-w-sm"
-      class:bg-error-light={toast.type === 'error'}
-      class:dark:bg-error-dark={toast.type === 'error'}
-      class:bg-warning-light={toast.type === 'warning'}
-      class:dark:bg-warning-dark={toast.type === 'warning'}
-      class:bg-success-light={toast.type === 'success'}
-      class:dark:bg-success-dark={toast.type === 'success'}
-      class:bg-light-primary={toast.type === 'info'}
-      class:dark:bg-dark-primary={toast.type === 'info'}
-      class:text-white={true}
+      class="flex items-center gap-3 px-4 py-3 rounded-sleek shadow-elevated max-w-sm border animate-slide-up text-earth-50
+        {toast.type === 'error' ? 'bg-error border-error/30' : ''}
+        {toast.type === 'warning' ? 'bg-warning border-warning/30' : ''}
+        {toast.type === 'success' ? 'bg-success border-success/30' : ''}
+        {toast.type === 'info' ? 'bg-accent-muted border-accent/30' : ''}"
       role="alert"
     >
       <!-- Icon -->
@@ -44,7 +39,7 @@
       <!-- Dismiss Button -->
       <button
         on:click={() => dismissToast(toast.id)}
-        class="flex-shrink-0 hover:opacity-75 transition-opacity"
+        class="flex-shrink-0 opacity-70 hover:opacity-100 transition-opacity"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
