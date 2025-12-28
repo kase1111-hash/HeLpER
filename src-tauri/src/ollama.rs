@@ -1,4 +1,5 @@
 use crate::commands::{ChatMessage, OllamaStatus};
+use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -124,5 +125,6 @@ pub async fn send_message(
     Ok(ChatMessage {
         role: chat_response.message.role,
         content: chat_response.message.content,
+        timestamp: Utc::now().to_rfc3339(),
     })
 }
