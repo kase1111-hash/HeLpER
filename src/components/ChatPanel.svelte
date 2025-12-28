@@ -10,11 +10,38 @@
     clearChat,
   } from '../lib/stores/chat';
   import { selectedNote } from '../lib/stores/notes';
+  import {
+    sttAvailable,
+    isChatSTTActive,
+    currentTranscript,
+    sttError,
+    toggleSTT,
+    stopSTT,
+  } from '../lib/stores/stt';
   import { QUICK_ACTIONS } from '../lib/constants';
   import type { ChatMessage, QuickAction } from '../lib/types';
   import { getTimestamp } from '../lib/utils/date';
 
   let inputValue = '';
+
+  // Handle STT result
+  function handleSTTResult(transcript: string) {
+    inputValue = inputValue + transcript + ' ';
+  }
+
+  // Toggle voice input
+  function handleVoiceInput() {
+    if ($isChatSTTActive) {
+      stopSTT();
+    } else {
+      toggleSTT('chat', handleSTTResult);
+    }
+  }
+
+  // Update input with interim transcript while listening
+  $: if ($isChatSTTActive && $currentTranscript) {
+    // Show interim results in placeholder or as preview
+  }
 
   async function handleSend() {
     if (!inputValue.trim() || $chatLoading) return;
@@ -136,9 +163,24 @@
           bind:value={inputValue}
           on:keydown={handleKeydown}
           class="input flex-1 text-chat-message py-2"
-          placeholder={$ollamaStatus.connected ? 'Type a message...' : 'Ollama not connected'}
+          placeholder={$isChatSTTActive ? ($currentTranscript || 'Listening...') : ($ollamaStatus.connected ? 'Type a message...' : 'Ollama not connected')}
           disabled={!$ollamaStatus.connected || $chatLoading}
         />
+        {#if $sttAvailable}
+          <button
+            on:click={handleVoiceInput}
+            class="btn px-3 text-sm transition-all duration-150"
+            class:btn-primary={$isChatSTTActive}
+            class:btn-secondary={!$isChatSTTActive}
+            class:animate-pulse-subtle={$isChatSTTActive}
+            disabled={!$ollamaStatus.connected || $chatLoading}
+            title={$isChatSTTActive ? 'Stop listening' : 'Voice input'}
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+          </button>
+        {/if}
         <button
           on:click={handleSend}
           class="btn btn-primary px-4 text-sm"
@@ -149,6 +191,9 @@
           </svg>
         </button>
       </div>
+      {#if $sttError}
+        <p class="text-xs text-error mt-1">{$sttError}</p>
+      {/if}
     </div>
   {/if}
 </div>
