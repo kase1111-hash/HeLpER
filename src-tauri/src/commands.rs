@@ -4,6 +4,7 @@ use crate::database::DbPool;
 use crate::ollama;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Note {
     pub id: String,
     pub date: String,
@@ -18,6 +19,7 @@ pub struct Note {
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
+    pub timestamp: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

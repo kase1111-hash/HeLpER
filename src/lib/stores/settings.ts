@@ -46,7 +46,7 @@ export function initializeTheme(): void {
       if ($settings.app.theme === 'system') {
         effectiveTheme.set(e.matches ? 'dark' : 'light');
       }
-    })();
+    });
   });
 }
 
