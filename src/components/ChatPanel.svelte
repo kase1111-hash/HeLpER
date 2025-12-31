@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { get } from 'svelte/store';
   import {
     chatPanelOpen,
     chatMessages,
@@ -10,6 +11,7 @@
     clearChat,
   } from '../lib/stores/chat';
   import { selectedNote } from '../lib/stores/notes';
+  import { settings } from '../lib/stores/settings';
   import {
     sttAvailable,
     isChatSTTActive,
@@ -18,6 +20,7 @@
     toggleSTT,
     stopSTT,
   } from '../lib/stores/stt';
+  import { sendChatMessage } from '../lib/services/tauri';
   import { QUICK_ACTIONS } from '../lib/constants';
   import type { ChatMessage, QuickAction } from '../lib/types';
   import { getTimestamp } from '../lib/utils/date';
@@ -56,16 +59,68 @@
     inputValue = '';
     chatLoading.set(true);
 
-    // TODO: Implement actual Ollama API call
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
+    try {
+      const currentSettings = get(settings);
+      const { ollamaUrl, model, temperature, maxTokens, systemPrompt, includeNoteContext } = currentSettings.ai;
+
+      // Build messages array for the API call
+      const messagesToSend: ChatMessage[] = [];
+
+      // Add system prompt as first message if this is the start of conversation
+      const existingMessages = get(chatMessages);
+      if (existingMessages.length === 1) {
+        // Only the user message we just added, so this is a new conversation
+        let systemContent = systemPrompt;
+
+        // Include note context if enabled and a note is selected
+        if (includeNoteContext && $selectedNote && $selectedNote.content.trim()) {
+          systemContent += `\n\nCurrent note context:\n${$selectedNote.content}`;
+        }
+
+        messagesToSend.push({
+          role: 'system',
+          content: systemContent,
+          timestamp: getTimestamp(),
+        });
+      }
+
+      // Add all conversation messages
+      existingMessages.forEach(msg => {
+        messagesToSend.push({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+        });
+      });
+
+      const response = await sendChatMessage(
+        ollamaUrl,
+        model,
+        messagesToSend,
+        temperature,
+        maxTokens
+      );
+
+      if (response) {
+        addChatMessage(response);
+      } else {
+        // API returned null - add error message
+        addChatMessage({
+          role: 'assistant',
+          content: 'Sorry, I couldn\'t get a response from Ollama. Please check that Ollama is running and try again.',
+          timestamp: getTimestamp(),
+        });
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      addChatMessage({
         role: 'assistant',
-        content: 'AI responses will be implemented with Ollama integration.',
+        content: `Error: ${error instanceof Error ? error.message : 'Failed to communicate with Ollama'}`,
         timestamp: getTimestamp(),
-      };
-      addChatMessage(assistantMessage);
+      });
+    } finally {
       chatLoading.set(false);
-    }, 1000);
+    }
   }
 
   function handleKeydown(event: KeyboardEvent) {
