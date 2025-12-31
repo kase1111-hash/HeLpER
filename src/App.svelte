@@ -10,8 +10,9 @@
   import SettingsPanel from './components/SettingsPanel.svelte';
   import ToastContainer from './components/ToastContainer.svelte';
   import { effectiveTheme, initializeTheme, initializeSettings, settings } from './lib/stores/settings';
-  import { settingsOpen } from './lib/stores/ui';
-  import { currentDate, loadNotesForDate } from './lib/stores/notes';
+  import { settingsOpen, closeAllPanels, focusSearch } from './lib/stores/ui';
+  import { currentDate, loadNotesForDate, addNote } from './lib/stores/notes';
+  import { createNote } from './lib/utils/note';
   import { ollamaStatus, refreshOllamaStatus } from './lib/stores/chat';
   import { setupTrayListeners } from './lib/services/tauri';
   import {
@@ -22,6 +23,42 @@
   let cleanupTrayListeners: (() => void) | null = null;
   let unsubscribeDate: (() => void) | null = null;
   let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+  function handleKeydown(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+    // Escape - close panels (works anywhere)
+    if (event.key === 'Escape') {
+      if (get(settingsOpen)) {
+        closeAllPanels();
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // Ctrl/Cmd + , - toggle settings
+    if ((event.ctrlKey || event.metaKey) && event.key === ',') {
+      settingsOpen.update(open => !open);
+      event.preventDefault();
+      return;
+    }
+
+    // Ctrl/Cmd + N - new note (unless in input)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'n' && !isInputFocused) {
+      const note = createNote('', get(currentDate));
+      addNote(note);
+      event.preventDefault();
+      return;
+    }
+
+    // Ctrl/Cmd + F - focus search (unless in input other than search)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+      focusSearch();
+      event.preventDefault();
+      return;
+    }
+  }
 
   async function checkOllama() {
     const currentSettings = get(settings);
@@ -91,6 +128,8 @@
     }
   });
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="h-screen flex flex-col bg-earth-900 text-earth-100 overflow-hidden">
   <!-- Title Bar -->
