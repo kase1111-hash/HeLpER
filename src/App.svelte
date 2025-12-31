@@ -10,16 +10,19 @@
   import SettingsPanel from './components/SettingsPanel.svelte';
   import ToastContainer from './components/ToastContainer.svelte';
   import FirstRunWizard from './components/FirstRunWizard.svelte';
-  import { effectiveTheme, initializeTheme, initializeSettings, settings, settingsLoaded } from './lib/stores/settings';
+  import {
+    effectiveTheme,
+    initializeTheme,
+    initializeSettings,
+    settings,
+    settingsLoaded,
+  } from './lib/stores/settings';
   import { settingsOpen, closeAllPanels, focusSearch } from './lib/stores/ui';
   import { currentDate, loadNotesForDate, addNote } from './lib/stores/notes';
   import { createNote } from './lib/utils/note';
   import { ollamaStatus, refreshOllamaStatus } from './lib/stores/chat';
   import { setupTrayListeners } from './lib/services/tauri';
-  import {
-    OLLAMA_HEALTH_CHECK_INTERVAL_MS,
-    OLLAMA_RETRY_INTERVAL_MS,
-  } from './lib/constants';
+  import { OLLAMA_HEALTH_CHECK_INTERVAL_MS, OLLAMA_RETRY_INTERVAL_MS } from './lib/constants';
 
   let cleanupTrayListeners: (() => void) | null = null;
   let unsubscribeDate: (() => void) | null = null;
@@ -37,7 +40,8 @@
 
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
-    const isInputFocused = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+    const isInputFocused =
+      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
     // Escape - close panels (works anywhere)
     if (event.key === 'Escape') {
@@ -50,7 +54,7 @@
 
     // Ctrl/Cmd + , - toggle settings
     if ((event.ctrlKey || event.metaKey) && event.key === ',') {
-      settingsOpen.update(open => !open);
+      settingsOpen.update((open) => !open);
       event.preventDefault();
       return;
     }
@@ -118,7 +122,7 @@
     loadNotesForDate(get(currentDate));
 
     // Subscribe to date changes and load notes when date changes
-    unsubscribeDate = currentDate.subscribe(date => {
+    unsubscribeDate = currentDate.subscribe((date) => {
       loadNotesForDate(date);
     });
 
@@ -179,7 +183,9 @@
 </div>
 
 <style>
-  :global(html), :global(body), :global(#app) {
+  :global(html),
+  :global(body),
+  :global(#app) {
     height: 100%;
     margin: 0;
     padding: 0;

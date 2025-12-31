@@ -62,9 +62,9 @@ async function saveSettings(): Promise<void> {
 }
 
 // Derived stores for convenience
-export const theme = derived(settings, $settings => $settings.app.theme);
-export const ollamaUrl = derived(settings, $settings => $settings.ai.ollamaUrl);
-export const ollamaModel = derived(settings, $settings => $settings.ai.model);
+export const theme = derived(settings, ($settings) => $settings.app.theme);
+export const ollamaUrl = derived(settings, ($settings) => $settings.ai.ollamaUrl);
+export const ollamaModel = derived(settings, ($settings) => $settings.ai.model);
 
 // Effective theme (resolves 'system' to actual theme)
 export const effectiveTheme = writable<'light' | 'dark'>('light');
@@ -73,32 +73,31 @@ export const effectiveTheme = writable<'light' | 'dark'>('light');
 export function initializeTheme(): void {
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-  function updateEffectiveTheme(settingsTheme: Theme): void {
+  function updateEffectiveTheme(settingsTheme: Theme, prefersDark: boolean): void {
     if (settingsTheme === 'system') {
-      effectiveTheme.set(mediaQuery.matches ? 'dark' : 'light');
+      effectiveTheme.set(prefersDark ? 'dark' : 'light');
     } else {
       effectiveTheme.set(settingsTheme);
     }
   }
 
-  // Subscribe to settings changes
-  settings.subscribe($settings => {
-    updateEffectiveTheme($settings.app.theme);
+  // Subscribe to settings changes (single subscription)
+  settings.subscribe(($settings) => {
+    updateEffectiveTheme($settings.app.theme, mediaQuery.matches);
   });
 
-  // Listen for system theme changes
+  // Listen for system theme changes - use get() to avoid creating new subscriptions
   mediaQuery.addEventListener('change', (e) => {
-    settings.subscribe($settings => {
-      if ($settings.app.theme === 'system') {
-        effectiveTheme.set(e.matches ? 'dark' : 'light');
-      }
-    });
+    const currentSettings = get(settings);
+    if (currentSettings.app.theme === 'system') {
+      effectiveTheme.set(e.matches ? 'dark' : 'light');
+    }
   });
 }
 
 // Update settings and persist
 export function updateSettings(partial: Partial<Settings>): void {
-  settings.update(s => ({
+  settings.update((s) => ({
     ...s,
     ...partial,
     app: { ...s.app, ...partial.app },

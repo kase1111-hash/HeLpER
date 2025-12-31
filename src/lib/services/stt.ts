@@ -20,10 +20,7 @@ export interface STTOptions {
 
 // Check if Speech Recognition is available
 export function isSTTAvailable(): boolean {
-  return !!(
-    window.SpeechRecognition ||
-    (window as any).webkitSpeechRecognition
-  );
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 }
 
 class SpeechToTextService {
@@ -36,8 +33,7 @@ class SpeechToTextService {
   }
 
   private initRecognition(): void {
-    const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       console.warn('Speech Recognition API not available');
@@ -120,7 +116,7 @@ class SpeechToTextService {
     try {
       this.recognition.start();
       return true;
-    } catch (error) {
+    } catch {
       options.onError?.('Failed to start speech recognition');
       return false;
     }

@@ -153,39 +153,39 @@ describe('Constants', () => {
     });
 
     it('should have format action', () => {
-      const format = QUICK_ACTIONS.find(a => a.id === 'format');
+      const format = QUICK_ACTIONS.find((a) => a.id === 'format');
       expect(format).toBeDefined();
       expect(format?.label).toBe('Format');
       expect(format?.prompt).toContain('{note}');
     });
 
     it('should have expand action', () => {
-      const expand = QUICK_ACTIONS.find(a => a.id === 'expand');
+      const expand = QUICK_ACTIONS.find((a) => a.id === 'expand');
       expect(expand).toBeDefined();
       expect(expand?.label).toBe('Expand');
       expect(expand?.prompt).toContain('{note}');
     });
 
     it('should have summarize action', () => {
-      const summarize = QUICK_ACTIONS.find(a => a.id === 'summarize');
+      const summarize = QUICK_ACTIONS.find((a) => a.id === 'summarize');
       expect(summarize).toBeDefined();
       expect(summarize?.label).toBe('Summarize');
     });
 
     it('should have grammar action', () => {
-      const grammar = QUICK_ACTIONS.find(a => a.id === 'grammar');
+      const grammar = QUICK_ACTIONS.find((a) => a.id === 'grammar');
       expect(grammar).toBeDefined();
       expect(grammar?.label).toBe('Fix Grammar');
     });
 
     it('should have professional action', () => {
-      const professional = QUICK_ACTIONS.find(a => a.id === 'professional');
+      const professional = QUICK_ACTIONS.find((a) => a.id === 'professional');
       expect(professional).toBeDefined();
       expect(professional?.label).toBe('Make Professional');
     });
 
     it('should all have prompt templates with {note} placeholder', () => {
-      QUICK_ACTIONS.forEach(action => {
+      QUICK_ACTIONS.forEach((action) => {
         expect(action.prompt).toContain('{note}');
       });
     });

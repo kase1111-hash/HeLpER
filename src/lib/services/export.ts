@@ -53,7 +53,7 @@ function notesToMarkdown(notes: Note[], includeMetadata: boolean): string {
 }
 
 function notesToJson(notes: Note[], includeMetadata: boolean): string {
-  const exportData = notes.map(note => {
+  const exportData = notes.map((note) => {
     if (includeMetadata) {
       return {
         id: note.id,
@@ -75,18 +75,20 @@ function notesToJson(notes: Note[], includeMetadata: boolean): string {
 export async function exportNotes(options: ExportOptions): Promise<boolean> {
   const { notes, format, includeMetadata = true } = options;
 
-  const content = format === 'markdown'
-    ? notesToMarkdown(notes, includeMetadata)
-    : notesToJson(notes, includeMetadata);
+  const content =
+    format === 'markdown'
+      ? notesToMarkdown(notes, includeMetadata)
+      : notesToJson(notes, includeMetadata);
 
   const extension = format === 'markdown' ? 'md' : 'json';
   const defaultName = `notes-export-${new Date().toISOString().split('T')[0]}.${extension}`;
 
   const filePath = await save({
     defaultPath: defaultName,
-    filters: format === 'markdown'
-      ? [{ name: 'Markdown', extensions: ['md'] }]
-      : [{ name: 'JSON', extensions: ['json'] }],
+    filters:
+      format === 'markdown'
+        ? [{ name: 'Markdown', extensions: ['md'] }]
+        : [{ name: 'JSON', extensions: ['json'] }],
   });
 
   if (!filePath) {

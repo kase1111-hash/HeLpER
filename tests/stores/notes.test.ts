@@ -26,7 +26,7 @@ describe('Notes Store', () => {
 
   // Spec: Daily Organization - Notes automatically organized by date
   describe('currentDate', () => {
-    it('should initialize to today\'s date', () => {
+    it("should initialize to today's date", () => {
       const today = new Date().toISOString().split('T')[0];
       expect(get(currentDate)).toBe(today);
     });
@@ -220,15 +220,17 @@ describe('Notes Store', () => {
       });
 
       // Add note to different date directly
-      notesMap.update(map => {
-        map.set('2020-01-01', [{
-          id: 'old-note',
-          date: '2020-01-01',
-          title: 'Old',
-          content: 'Old content',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }]);
+      notesMap.update((map) => {
+        map.set('2020-01-01', [
+          {
+            id: 'old-note',
+            date: '2020-01-01',
+            title: 'Old',
+            content: 'Old content',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ]);
         return new Map(map);
       });
 

@@ -171,9 +171,30 @@ describe('Note Utilities', () => {
   describe('sortNotesByCreated', () => {
     it('should sort notes by creation time (newest first)', () => {
       const notes: Note[] = [
-        { id: '1', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T10:00:00Z', updatedAt: '2025-12-26T10:00:00Z' },
-        { id: '2', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T12:00:00Z', updatedAt: '2025-12-26T12:00:00Z' },
-        { id: '3', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T11:00:00Z', updatedAt: '2025-12-26T11:00:00Z' },
+        {
+          id: '1',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T10:00:00Z',
+          updatedAt: '2025-12-26T10:00:00Z',
+        },
+        {
+          id: '2',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T12:00:00Z',
+          updatedAt: '2025-12-26T12:00:00Z',
+        },
+        {
+          id: '3',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T11:00:00Z',
+          updatedAt: '2025-12-26T11:00:00Z',
+        },
       ];
 
       const sorted = sortNotesByCreated(notes);
@@ -186,9 +207,30 @@ describe('Note Utilities', () => {
   describe('sortNotesByUpdated', () => {
     it('should sort notes by last updated (most recent first)', () => {
       const notes: Note[] = [
-        { id: '1', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T10:00:00Z', updatedAt: '2025-12-26T15:00:00Z' },
-        { id: '2', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T12:00:00Z', updatedAt: '2025-12-26T12:00:00Z' },
-        { id: '3', date: '2025-12-26', title: null, content: '', createdAt: '2025-12-26T11:00:00Z', updatedAt: '2025-12-26T16:00:00Z' },
+        {
+          id: '1',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T10:00:00Z',
+          updatedAt: '2025-12-26T15:00:00Z',
+        },
+        {
+          id: '2',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T12:00:00Z',
+          updatedAt: '2025-12-26T12:00:00Z',
+        },
+        {
+          id: '3',
+          date: '2025-12-26',
+          title: null,
+          content: '',
+          createdAt: '2025-12-26T11:00:00Z',
+          updatedAt: '2025-12-26T16:00:00Z',
+        },
       ];
 
       const sorted = sortNotesByUpdated(notes);

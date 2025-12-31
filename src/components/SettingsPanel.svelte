@@ -42,21 +42,40 @@
   function handleThemeChange(event: Event) {
     const target = event.target as HTMLSelectElement;
     updateSettings({
-      app: { ...$settings.app, theme: target.value as Theme }
+      app: { ...$settings.app, theme: target.value as Theme },
     });
+  }
+
+  function isValidUrl(urlString: string): boolean {
+    if (!urlString.trim()) return true; // Allow empty to reset to default
+    try {
+      const url = new URL(urlString);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   function handleOllamaUrlChange(event: Event) {
     const target = event.target as HTMLInputElement;
+    const value = target.value.trim();
+
+    if (!isValidUrl(value)) {
+      showToast({ type: 'error', message: 'Please enter a valid URL (http:// or https://)' });
+      // Reset to previous value
+      target.value = $settings.ai.ollamaUrl;
+      return;
+    }
+
     updateSettings({
-      ai: { ...$settings.ai, ollamaUrl: target.value }
+      ai: { ...$settings.ai, ollamaUrl: value },
     });
   }
 
   function handleModelChange(event: Event) {
     const target = event.target as HTMLInputElement;
     updateSettings({
-      ai: { ...$settings.ai, model: target.value }
+      ai: { ...$settings.ai, model: target.value },
     });
   }
 
@@ -77,7 +96,9 @@
   class="fixed inset-0 bg-earth-950/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
   on:click={handleBackdropClick}
 >
-  <div class="bg-earth-800 rounded-sleek shadow-elevated w-full max-w-md mx-4 max-h-[80vh] overflow-hidden border border-earth-600/50 animate-slide-up">
+  <div
+    class="bg-earth-800 rounded-sleek shadow-elevated w-full max-w-md mx-4 max-h-[80vh] overflow-hidden border border-earth-600/50 animate-slide-up"
+  >
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-earth-600/50">
       <h2 class="text-lg font-semibold text-earth-50">Settings</h2>
@@ -86,7 +107,12 @@
         class="w-8 h-8 flex items-center justify-center rounded-md text-earth-400 hover:bg-earth-600 hover:text-earth-100 transition-all duration-150"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </div>
@@ -95,9 +121,7 @@
     <div class="p-5 space-y-6 overflow-y-auto max-h-[60vh]">
       <!-- Appearance Section -->
       <section>
-        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
-          Appearance
-        </h3>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Appearance</h3>
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <label for="theme" class="text-sm text-earth-200">Theme</label>
@@ -152,48 +176,73 @@
 
       <!-- Behavior Section -->
       <section>
-        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
-          Behavior
-        </h3>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Behavior</h3>
         <div class="space-y-3">
           <label class="flex items-center gap-3 cursor-pointer group">
             <div class="relative">
               <input
                 type="checkbox"
                 checked={$settings.app.minimizeOnClose}
-                on:change={(e) => updateSettings({ app: { ...$settings.app, minimizeOnClose: e.currentTarget.checked } })}
+                on:change={(e) =>
+                  updateSettings({
+                    app: { ...$settings.app, minimizeOnClose: e.currentTarget.checked },
+                  })}
                 class="sr-only peer"
               />
-              <div class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"></div>
-              <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"></div>
+              <div
+                class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+              ></div>
             </div>
-            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors">Minimize to tray on close</span>
+            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+              >Minimize to tray on close</span
+            >
           </label>
           <label class="flex items-center gap-3 cursor-pointer group">
             <div class="relative">
               <input
                 type="checkbox"
                 checked={$settings.app.startMinimized}
-                on:change={(e) => updateSettings({ app: { ...$settings.app, startMinimized: e.currentTarget.checked } })}
+                on:change={(e) =>
+                  updateSettings({
+                    app: { ...$settings.app, startMinimized: e.currentTarget.checked },
+                  })}
                 class="sr-only peer"
               />
-              <div class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"></div>
-              <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"></div>
+              <div
+                class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+              ></div>
             </div>
-            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors">Start minimized</span>
+            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+              >Start minimized</span
+            >
           </label>
           <label class="flex items-center gap-3 cursor-pointer group">
             <div class="relative">
               <input
                 type="checkbox"
                 checked={$settings.app.alwaysOnTop}
-                on:change={(e) => updateSettings({ app: { ...$settings.app, alwaysOnTop: e.currentTarget.checked } })}
+                on:change={(e) =>
+                  updateSettings({
+                    app: { ...$settings.app, alwaysOnTop: e.currentTarget.checked },
+                  })}
                 class="sr-only peer"
               />
-              <div class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"></div>
-              <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"></div>
+              <div
+                class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+              ></div>
             </div>
-            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors">Always on top</span>
+            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+              >Always on top</span
+            >
           </label>
         </div>
       </section>
@@ -202,9 +251,7 @@
 
       <!-- Data Section -->
       <section>
-        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
-          Data
-        </h3>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">Data</h3>
         <div class="space-y-3">
           <div>
             <p class="text-sm text-earth-300 mb-2">Export Notes</p>
@@ -241,9 +288,7 @@
 
     <!-- Footer -->
     <div class="flex justify-end gap-2 px-5 py-4 border-t border-earth-600/50 bg-earth-800/50">
-      <button on:click={handleClose} class="btn btn-secondary text-sm">
-        Close
-      </button>
+      <button on:click={handleClose} class="btn btn-secondary text-sm"> Close </button>
     </div>
   </div>
 </div>

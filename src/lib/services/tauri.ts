@@ -88,17 +88,17 @@ export function setupTrayListeners(): () => void {
     const date = get(currentDate);
     const note = createNote('', date);
     addNote(note);
-  }).then(unlisten => unlisteners.push(unlisten));
+  }).then((unlisten) => unlisteners.push(unlisten));
 
   listen('go-to-today', () => {
     navigateToToday();
-  }).then(unlisten => unlisteners.push(unlisten));
+  }).then((unlisten) => unlisteners.push(unlisten));
 
   listen('open-settings', () => {
     toggleSettings();
-  }).then(unlisten => unlisteners.push(unlisten));
+  }).then((unlisten) => unlisteners.push(unlisten));
 
   return () => {
-    unlisteners.forEach(unlisten => unlisten());
+    unlisteners.forEach((unlisten) => unlisten());
   };
 }

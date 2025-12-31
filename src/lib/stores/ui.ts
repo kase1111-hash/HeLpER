@@ -24,7 +24,7 @@ export function showToast(toast: Omit<Toast, 'id'>): void {
   const id = crypto.randomUUID();
   const duration = toast.duration ?? 5000;
 
-  toasts.update(t => [...t, { ...toast, id }]);
+  toasts.update((t) => [...t, { ...toast, id }]);
 
   if (duration > 0) {
     setTimeout(() => {
@@ -34,7 +34,7 @@ export function showToast(toast: Omit<Toast, 'id'>): void {
 }
 
 export function dismissToast(id: string): void {
-  toasts.update(t => t.filter(toast => toast.id !== id));
+  toasts.update((t) => t.filter((toast) => toast.id !== id));
 }
 
 // Search query for notes
@@ -51,11 +51,11 @@ export function clearSearch(): void {
 
 // Toggle functions
 export function toggleSettings(): void {
-  settingsOpen.update(open => !open);
+  settingsOpen.update((open) => !open);
 }
 
 export function toggleCalendar(): void {
-  calendarOpen.update(open => !open);
+  calendarOpen.update((open) => !open);
 }
 
 // Close all panels

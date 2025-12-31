@@ -2,6 +2,11 @@ use crate::commands::{ChatMessage, OllamaStatus};
 use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+// Timeout constants
+const STATUS_CHECK_TIMEOUT_SECS: u64 = 5;
+const CHAT_REQUEST_TIMEOUT_SECS: u64 = 120;
 
 #[derive(Debug, Serialize)]
 struct OllamaChatRequest {
@@ -40,7 +45,10 @@ struct OllamaModel {
 
 /// Check if Ollama is running and get available models
 pub async fn check_status(base_url: &str) -> Result<OllamaStatus, String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .timeout(Duration::from_secs(STATUS_CHECK_TIMEOUT_SECS))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     let url = format!("{}/api/tags", base_url);
 
     match client.get(&url).send().await {
@@ -85,7 +93,10 @@ pub async fn send_message(
     temperature: f32,
     max_tokens: u32,
 ) -> Result<ChatMessage, String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .timeout(Duration::from_secs(CHAT_REQUEST_TIMEOUT_SECS))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
     let url = format!("{}/api/chat", base_url);
 
     let ollama_messages: Vec<OllamaMessage> = messages
