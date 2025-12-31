@@ -94,7 +94,24 @@ HeLpER/
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md) - How to use HeLpER
-- [Spec Sheet](SPEC_SHEET.md) - Technical specifications
+
+## System Requirements
+
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| OS | Windows 10 / macOS 11 / Ubuntu 20.04 | Latest stable |
+| RAM | 4 GB | 8 GB+ (for Ollama) |
+| Storage | 50 MB (app) | 4 GB+ (with LLM models) |
+
+## Data Storage
+
+All data is stored locally:
+
+| OS | Location |
+|----|----------|
+| Windows | `%APPDATA%\HeLpER\` |
+| macOS | `~/Library/Application Support/HeLpER/` |
+| Linux | `~/.local/share/helper/` |
 
 ## Development
 
