@@ -15,7 +15,7 @@
   let unsubscribeFocus: (() => void) | null = null;
 
   onMount(() => {
-    unsubscribeFocus = searchFocused.subscribe(focused => {
+    unsubscribeFocus = searchFocused.subscribe((focused) => {
       if (focused && searchInput) {
         searchInput.focus();
         searchFocused.set(false);
@@ -51,7 +51,7 @@
   }
 
   $: filteredNotes = $searchQuery
-    ? $currentNotes.filter(note =>
+    ? $currentNotes.filter((note) =>
         note.content.toLowerCase().includes($searchQuery.toLowerCase())
       )
     : $currentNotes;
@@ -60,8 +60,18 @@
 <div class="card max-h-48 overflow-y-auto">
   <!-- Search Input -->
   <div class="relative mb-2">
-    <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-earth-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <svg
+      class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-earth-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
     </svg>
     <input
       bind:this={searchInput}
@@ -78,7 +88,12 @@
         title="Clear search (Esc)"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     {/if}
@@ -114,7 +129,12 @@
           title="Delete note"
         >
           <svg class="w-3.5 h-3.5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
           </svg>
         </button>
       </div>
@@ -129,7 +149,12 @@
       on:click={handleNewNote}
       class="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-accent hover:bg-earth-600 transition-all duration-150 group active:scale-[0.98]"
     >
-      <svg class="w-4 h-4 transition-transform duration-150 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="w-4 h-4 transition-transform duration-150 group-hover:rotate-90"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
       <span class="text-note-title font-medium">New Note</span>

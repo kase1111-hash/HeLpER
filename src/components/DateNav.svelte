@@ -12,7 +12,9 @@
   $: isTodayDate = isToday($currentDate);
 </script>
 
-<div class="flex items-center justify-between px-4 py-2.5 bg-earth-800 border-b border-earth-600/50">
+<div
+  class="flex items-center justify-between px-4 py-2.5 bg-earth-800 border-b border-earth-600/50"
+>
   <!-- Previous Day Button -->
   <button
     on:click={navigatePreviousDay}

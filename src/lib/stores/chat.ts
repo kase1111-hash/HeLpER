@@ -1,4 +1,4 @@
-import { writable, derived, get } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import type { ChatMessage, OllamaStatus } from '../types';
 import { checkOllamaStatus } from '../services/tauri';
 
@@ -26,12 +26,12 @@ export const ollamaChecking = writable<boolean>(false);
 
 // Toggle chat panel
 export function toggleChatPanel(): void {
-  chatPanelOpen.update(open => !open);
+  chatPanelOpen.update((open) => !open);
 }
 
 // Add a message to chat
 export function addChatMessage(message: ChatMessage): void {
-  chatMessages.update(messages => [...messages, message]);
+  chatMessages.update((messages) => [...messages, message]);
 }
 
 // Clear chat history
@@ -77,7 +77,4 @@ export async function refreshOllamaStatus(ollamaUrl: string): Promise<boolean> {
 }
 
 // Derived: is chat available
-export const isChatAvailable = derived(
-  ollamaStatus,
-  $status => $status.connected
-);
+export const isChatAvailable = derived(ollamaStatus, ($status) => $status.connected);

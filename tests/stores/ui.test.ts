@@ -110,7 +110,7 @@ describe('UI Store', () => {
         showToast({ type: 'info', message: 'Info' });
 
         const t = get(toasts);
-        expect(t.map(toast => toast.type)).toEqual(['error', 'warning', 'success', 'info']);
+        expect(t.map((toast) => toast.type)).toEqual(['error', 'warning', 'success', 'info']);
       });
 
       it('should auto-dismiss after duration', () => {

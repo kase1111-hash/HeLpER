@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+src-tauri/target
+.svelte-kit
+coverage
+package-lock.json
+Cargo.lock
+*.md

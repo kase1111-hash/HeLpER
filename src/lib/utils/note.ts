@@ -40,7 +40,7 @@ export function extractTitle(content: string): string | null {
 /**
  * Get preview text for a note
  */
-export function getNotePreview(note: Note, maxLength = 50): string {
+export function getNotePreview(note: Note, _maxLength = 50): string {
   if (note.title) return note.title;
   if (!note.content.trim()) return 'Empty note';
   return extractTitle(note.content) || 'Empty note';
@@ -79,8 +79,8 @@ export function isDeleted(note: Note): boolean {
  * Sort notes by creation time (newest first)
  */
 export function sortNotesByCreated(notes: Note[]): Note[] {
-  return [...notes].sort((a, b) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  return [...notes].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
@@ -88,7 +88,7 @@ export function sortNotesByCreated(notes: Note[]): Note[] {
  * Sort notes by last updated (most recent first)
  */
 export function sortNotesByUpdated(notes: Note[]): Note[] {
-  return [...notes].sort((a, b) =>
-    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  return [...notes].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 }

@@ -1,4 +1,10 @@
-import type { AppSettings, AISettings, DataSettings, NotificationSettings, QuickActionConfig } from './types';
+import type {
+  AppSettings,
+  AISettings,
+  DataSettings,
+  NotificationSettings,
+  QuickActionConfig,
+} from './types';
 
 // Default settings
 export const DEFAULT_APP_SETTINGS: AppSettings = {

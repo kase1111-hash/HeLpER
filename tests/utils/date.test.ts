@@ -54,7 +54,7 @@ describe('Date Utilities', () => {
   });
 
   describe('isToday', () => {
-    it('should return true for today\'s date', () => {
+    it("should return true for today's date", () => {
       const today = formatDateISO(new Date());
       expect(isToday(today)).toBe(true);
     });

@@ -62,9 +62,9 @@ async function saveSettings(): Promise<void> {
 }
 
 // Derived stores for convenience
-export const theme = derived(settings, $settings => $settings.app.theme);
-export const ollamaUrl = derived(settings, $settings => $settings.ai.ollamaUrl);
-export const ollamaModel = derived(settings, $settings => $settings.ai.model);
+export const theme = derived(settings, ($settings) => $settings.app.theme);
+export const ollamaUrl = derived(settings, ($settings) => $settings.ai.ollamaUrl);
+export const ollamaModel = derived(settings, ($settings) => $settings.ai.model);
 
 // Effective theme (resolves 'system' to actual theme)
 export const effectiveTheme = writable<'light' | 'dark'>('light');
@@ -82,7 +82,7 @@ export function initializeTheme(): void {
   }
 
   // Subscribe to settings changes (single subscription)
-  settings.subscribe($settings => {
+  settings.subscribe(($settings) => {
     updateEffectiveTheme($settings.app.theme, mediaQuery.matches);
   });
 
@@ -97,7 +97,7 @@ export function initializeTheme(): void {
 
 // Update settings and persist
 export function updateSettings(partial: Partial<Settings>): void {
-  settings.update(s => ({
+  settings.update((s) => ({
     ...s,
     ...partial,
     app: { ...s.app, ...partial.app },

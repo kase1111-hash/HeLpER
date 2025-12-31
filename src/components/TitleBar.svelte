@@ -16,10 +16,14 @@
   }
 </script>
 
-<div class="drag-region flex items-center justify-between h-11 px-4 bg-earth-950 border-b border-earth-700/50">
+<div
+  class="drag-region flex items-center justify-between h-11 px-4 bg-earth-950 border-b border-earth-700/50"
+>
   <!-- App Title -->
   <div class="flex items-center gap-2.5">
-    <div class="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-warm flex items-center justify-center shadow-glow">
+    <div
+      class="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent-warm flex items-center justify-center shadow-glow"
+    >
       <span class="text-earth-900 text-xs font-bold">H</span>
     </div>
     <span class="text-app-title text-earth-50 tracking-wide">HeLpER</span>
@@ -43,7 +47,12 @@
       title="Maximize"
     >
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M4 16v4h4M16 4h4v4M16 20h4v-4" />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 8V4h4M4 16v4h4M16 4h4v4M16 20h4v-4"
+        />
       </svg>
     </button>
 
@@ -53,7 +62,12 @@
       title="Close"
     >
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        />
       </svg>
     </button>
   </div>
