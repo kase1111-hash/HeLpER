@@ -3,6 +3,7 @@
   import { get } from 'svelte/store';
   import TitleBar from './components/TitleBar.svelte';
   import DateNav from './components/DateNav.svelte';
+  import Calendar from './components/Calendar.svelte';
   import NotesList from './components/NotesList.svelte';
   import NoteEditor from './components/NoteEditor.svelte';
   import ChatPanel from './components/ChatPanel.svelte';
@@ -152,6 +153,9 @@
 
   <!-- Date Navigation -->
   <DateNav />
+
+  <!-- Calendar Picker -->
+  <Calendar />
 
   <!-- Main Content Area -->
   <div class="flex-1 flex flex-col overflow-hidden p-3 gap-3">
