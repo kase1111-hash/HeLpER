@@ -4,6 +4,7 @@
     selectedNoteId,
     currentDate,
     addNote,
+    deleteNote,
   } from '../lib/stores/notes';
   import { createNote, getNotePreview } from '../lib/utils/note';
   import type { Note } from '../lib/types';
@@ -17,20 +18,30 @@
     selectedNoteId.set(note.id);
   }
 
+  function handleDeleteNote(event: Event, note: Note) {
+    event.stopPropagation();
+    if (confirm('Delete this note?')) {
+      deleteNote(note.id, note.date);
+    }
+  }
+
   $: notes = $currentNotes;
 </script>
 
 <div class="card max-h-36 overflow-y-auto">
   <div class="space-y-1">
     {#each notes as note (note.id)}
-      <button
-        on:click={() => handleSelectNote(note)}
-        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 group"
+      <div
+        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 group cursor-pointer"
         class:bg-accent={$selectedNoteId === note.id}
         class:text-earth-900={$selectedNoteId === note.id}
         class:shadow-glow={$selectedNoteId === note.id}
         class:hover:bg-earth-600={$selectedNoteId !== note.id}
         class:text-earth-200={$selectedNoteId !== note.id}
+        on:click={() => handleSelectNote(note)}
+        on:keydown={(e) => e.key === 'Enter' && handleSelectNote(note)}
+        role="button"
+        tabindex="0"
       >
         <span
           class="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-all duration-150"
@@ -38,10 +49,20 @@
           class:bg-earth-400={$selectedNoteId !== note.id}
           class:group-hover:bg-accent={$selectedNoteId !== note.id}
         ></span>
-        <span class="text-note-title truncate">
+        <span class="text-note-title truncate flex-1">
           {getNotePreview(note)}
         </span>
-      </button>
+        <button
+          on:click={(e) => handleDeleteNote(e, note)}
+          class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-error/20 transition-all duration-150"
+          class:hover:bg-earth-500={$selectedNoteId === note.id}
+          title="Delete note"
+        >
+          <svg class="w-3.5 h-3.5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
     {:else}
       <p class="text-center text-earth-400 py-3 text-sm">
         No notes for this day

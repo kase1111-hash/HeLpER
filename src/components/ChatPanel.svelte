@@ -6,9 +6,11 @@
     chatInput,
     chatLoading,
     ollamaStatus,
+    ollamaChecking,
     toggleChatPanel,
     addChatMessage,
     clearChat,
+    refreshOllamaStatus,
   } from '../lib/stores/chat';
   import { selectedNote } from '../lib/stores/notes';
   import { settings } from '../lib/stores/settings';
@@ -26,6 +28,33 @@
   import { getTimestamp } from '../lib/utils/date';
 
   let inputValue = '';
+
+  // Parse error message and return user-friendly version with suggestion
+  function getErrorMessage(error: unknown): string {
+    const errorStr = error instanceof Error ? error.message : String(error);
+    const lowerError = errorStr.toLowerCase();
+
+    if (lowerError.includes('model') && lowerError.includes('not found')) {
+      const currentSettings = get(settings);
+      return `Model "${currentSettings.ai.model}" not found. Run: ollama pull ${currentSettings.ai.model}`;
+    }
+    if (lowerError.includes('connection') || lowerError.includes('refused') || lowerError.includes('econnrefused')) {
+      return 'Cannot connect to Ollama. Make sure Ollama is running (ollama serve).';
+    }
+    if (lowerError.includes('timeout')) {
+      return 'Request timed out. The model may be loading or Ollama is busy.';
+    }
+    if (lowerError.includes('no models')) {
+      return 'No models installed. Run: ollama pull llama3.2:3b';
+    }
+
+    return `Error: ${errorStr}`;
+  }
+
+  async function handleRetryConnection() {
+    const currentSettings = get(settings);
+    await refreshOllamaStatus(currentSettings.ai.ollamaUrl);
+  }
 
   // Handle STT result
   function handleSTTResult(transcript: string) {
@@ -107,17 +136,21 @@
         // API returned null - add error message
         addChatMessage({
           role: 'assistant',
-          content: 'Sorry, I couldn\'t get a response from Ollama. Please check that Ollama is running and try again.',
+          content: 'Sorry, I couldn\'t get a response. Check that Ollama is running and try again.',
           timestamp: getTimestamp(),
         });
+        // Refresh connection status
+        handleRetryConnection();
       }
     } catch (error) {
       console.error('Chat error:', error);
       addChatMessage({
         role: 'assistant',
-        content: `Error: ${error instanceof Error ? error.message : 'Failed to communicate with Ollama'}`,
+        content: getErrorMessage(error),
         timestamp: getTimestamp(),
       });
+      // Refresh connection status on error
+      handleRetryConnection();
     } finally {
       chatLoading.set(false);
     }
@@ -192,10 +225,27 @@
           </div>
         {:else}
           <div class="flex flex-col items-center justify-center py-4 text-earth-400">
-            <svg class="w-8 h-8 mb-2 text-earth-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            <p class="text-sm">Ask me to help with your notes</p>
+            {#if !$ollamaStatus.connected}
+              <svg class="w-8 h-8 mb-2 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p class="text-sm text-warning mb-2">Ollama not connected</p>
+              <p class="text-xs text-earth-500 text-center mb-2">
+                {$ollamaStatus.error || 'Start Ollama to use AI features'}
+              </p>
+              <button
+                on:click={handleRetryConnection}
+                disabled={$ollamaChecking}
+                class="px-3 py-1 text-xs rounded bg-earth-600 hover:bg-earth-500 text-earth-200 transition-colors disabled:opacity-50"
+              >
+                {$ollamaChecking ? 'Connecting...' : 'Retry Connection'}
+              </button>
+            {:else}
+              <svg class="w-8 h-8 mb-2 text-earth-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <p class="text-sm">Ask me to help with your notes</p>
+            {/if}
           </div>
         {/each}
 
