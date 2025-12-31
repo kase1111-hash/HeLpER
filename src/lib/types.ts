@@ -64,6 +64,7 @@ export interface AppSettings {
   timeFormat: TimeFormat;
   spellCheck: boolean;
   autoSaveDelay: number;
+  hasCompletedOnboarding: boolean;
 }
 
 export interface AISettings {

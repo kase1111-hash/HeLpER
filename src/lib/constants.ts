@@ -12,6 +12,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   timeFormat: '12h',
   spellCheck: true,
   autoSaveDelay: 500,
+  hasCompletedOnboarding: false,
 };
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
