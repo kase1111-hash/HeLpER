@@ -1,5 +1,6 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { ChatMessage, OllamaStatus } from '../types';
+import { checkOllamaStatus } from '../services/tauri';
 
 // Chat panel visibility
 export const chatPanelOpen = writable<boolean>(false);
@@ -19,6 +20,9 @@ export const ollamaStatus = writable<OllamaStatus>({
   model: null,
   error: null,
 });
+
+// Whether we're currently checking/retrying Ollama connection
+export const ollamaChecking = writable<boolean>(false);
 
 // Toggle chat panel
 export function toggleChatPanel(): void {
@@ -50,6 +54,26 @@ export function setOllamaDisconnected(error?: string): void {
     model: null,
     error: error || null,
   });
+}
+
+// Check Ollama connection and update status
+export async function refreshOllamaStatus(ollamaUrl: string): Promise<boolean> {
+  ollamaChecking.set(true);
+  try {
+    const status = await checkOllamaStatus(ollamaUrl);
+    if (status.connected && status.model) {
+      setOllamaConnected(status.model);
+      return true;
+    } else {
+      setOllamaDisconnected(status.error || 'Unable to connect to Ollama');
+      return false;
+    }
+  } catch (error) {
+    setOllamaDisconnected(error instanceof Error ? error.message : 'Connection failed');
+    return false;
+  } finally {
+    ollamaChecking.set(false);
+  }
 }
 
 // Derived: is chat available

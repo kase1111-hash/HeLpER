@@ -12,20 +12,47 @@
   import { effectiveTheme, initializeTheme, settings } from './lib/stores/settings';
   import { settingsOpen } from './lib/stores/ui';
   import { currentDate, loadNotesForDate } from './lib/stores/notes';
-  import { setOllamaConnected, setOllamaDisconnected } from './lib/stores/chat';
-  import { setupTrayListeners, checkOllamaStatus } from './lib/services/tauri';
+  import { ollamaStatus, refreshOllamaStatus } from './lib/stores/chat';
+  import { setupTrayListeners } from './lib/services/tauri';
+  import {
+    OLLAMA_HEALTH_CHECK_INTERVAL_MS,
+    OLLAMA_RETRY_INTERVAL_MS,
+  } from './lib/constants';
 
   let cleanupTrayListeners: (() => void) | null = null;
   let unsubscribeDate: (() => void) | null = null;
+  let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
-  async function initializeOllama() {
+  async function checkOllama() {
     const currentSettings = get(settings);
-    const status = await checkOllamaStatus(currentSettings.ai.ollamaUrl);
-    if (status.connected && status.model) {
-      setOllamaConnected(status.model);
-    } else {
-      setOllamaDisconnected(status.error || undefined);
+    await refreshOllamaStatus(currentSettings.ai.ollamaUrl);
+  }
+
+  function startHealthChecks() {
+    // Clear any existing interval
+    if (healthCheckInterval) {
+      clearInterval(healthCheckInterval);
     }
+
+    // Use shorter interval when disconnected, longer when connected
+    const updateInterval = () => {
+      const status = get(ollamaStatus);
+      const interval = status.connected
+        ? OLLAMA_HEALTH_CHECK_INTERVAL_MS
+        : OLLAMA_RETRY_INTERVAL_MS;
+
+      if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+      }
+
+      healthCheckInterval = setInterval(async () => {
+        await checkOllama();
+        // Adjust interval based on new connection status
+        updateInterval();
+      }, interval);
+    };
+
+    updateInterval();
   }
 
   onMount(() => {
@@ -44,8 +71,10 @@
       loadNotesForDate(date);
     });
 
-    // Check Ollama connection status
-    initializeOllama();
+    // Check Ollama connection status and start periodic health checks
+    checkOllama().then(() => {
+      startHealthChecks();
+    });
   });
 
   onDestroy(() => {
@@ -54,6 +83,9 @@
     }
     if (unsubscribeDate) {
       unsubscribeDate();
+    }
+    if (healthCheckInterval) {
+      clearInterval(healthCheckInterval);
     }
   });
 </script>
