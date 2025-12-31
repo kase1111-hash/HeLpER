@@ -14,6 +14,9 @@ export const currentDate = writable<string>(formatDateISO(new Date()));
 // All notes (keyed by date for efficient lookup)
 export const notesMap = writable<Map<string, Note[]>>(new Map());
 
+// Alias for export functionality
+export { notesMap as allNotes };
+
 // Currently selected note ID
 export const selectedNoteId = writable<string | null>(null);
 

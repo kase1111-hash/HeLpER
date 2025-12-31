@@ -1,7 +1,43 @@
 <script lang="ts">
   import { settings, updateSettings } from '../lib/stores/settings';
-  import { settingsOpen, toggleSettings } from '../lib/stores/ui';
+  import { settingsOpen, toggleSettings, showToast } from '../lib/stores/ui';
+  import { allNotes } from '../lib/stores/notes';
+  import { exportNotes, backupAllData } from '../lib/services/export';
   import type { Theme } from '../lib/types';
+
+  let exporting = false;
+
+  async function handleExport(format: 'markdown' | 'json') {
+    if (exporting) return;
+    exporting = true;
+    try {
+      const notes = Array.from($allNotes.values()).flat();
+      const success = await exportNotes({ notes, format });
+      if (success) {
+        showToast({ type: 'success', message: `Notes exported as ${format.toUpperCase()}` });
+      }
+    } catch (error) {
+      showToast({ type: 'error', message: 'Failed to export notes' });
+    } finally {
+      exporting = false;
+    }
+  }
+
+  async function handleBackup() {
+    if (exporting) return;
+    exporting = true;
+    try {
+      const notes = Array.from($allNotes.values()).flat();
+      const success = await backupAllData(notes);
+      if (success) {
+        showToast({ type: 'success', message: 'Backup created successfully' });
+      }
+    } catch (error) {
+      showToast({ type: 'error', message: 'Failed to create backup' });
+    } finally {
+      exporting = false;
+    }
+  }
 
   function handleThemeChange(event: Event) {
     const target = event.target as HTMLSelectElement;
@@ -159,6 +195,46 @@
             </div>
             <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors">Always on top</span>
           </label>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Data Section -->
+      <section>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
+          Data
+        </h3>
+        <div class="space-y-3">
+          <div>
+            <p class="text-sm text-earth-300 mb-2">Export Notes</p>
+            <div class="flex gap-2">
+              <button
+                on:click={() => handleExport('markdown')}
+                disabled={exporting}
+                class="btn btn-secondary text-sm flex-1"
+              >
+                {exporting ? 'Exporting...' : 'Markdown'}
+              </button>
+              <button
+                on:click={() => handleExport('json')}
+                disabled={exporting}
+                class="btn btn-secondary text-sm flex-1"
+              >
+                {exporting ? 'Exporting...' : 'JSON'}
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm text-earth-300 mb-2">Backup All Data</p>
+            <button
+              on:click={handleBackup}
+              disabled={exporting}
+              class="btn btn-secondary text-sm w-full"
+            >
+              {exporting ? 'Creating Backup...' : 'Create Backup'}
+            </button>
+          </div>
         </div>
       </section>
     </div>
