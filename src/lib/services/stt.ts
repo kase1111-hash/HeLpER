@@ -22,7 +22,7 @@ export interface STTOptions {
 export function isSTTAvailable(): boolean {
   return !!(
     window.SpeechRecognition ||
-    (window as any).webkitSpeechRecognition
+    window.webkitSpeechRecognition
   );
 }
 
@@ -37,7 +37,7 @@ class SpeechToTextService {
 
   private initRecognition(): void {
     const SpeechRecognition =
-      window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       console.warn('Speech Recognition API not available');

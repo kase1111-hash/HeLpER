@@ -46,10 +46,29 @@
     });
   }
 
+  function isValidUrl(urlString: string): boolean {
+    if (!urlString.trim()) return true; // Allow empty to reset to default
+    try {
+      const url = new URL(urlString);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   function handleOllamaUrlChange(event: Event) {
     const target = event.target as HTMLInputElement;
+    const value = target.value.trim();
+
+    if (!isValidUrl(value)) {
+      showToast({ type: 'error', message: 'Please enter a valid URL (http:// or https://)' });
+      // Reset to previous value
+      target.value = $settings.ai.ollamaUrl;
+      return;
+    }
+
     updateSettings({
-      ai: { ...$settings.ai, ollamaUrl: target.value }
+      ai: { ...$settings.ai, ollamaUrl: value }
     });
   }
 

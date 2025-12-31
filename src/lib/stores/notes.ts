@@ -58,6 +58,9 @@ export async function loadNotesForDate(date: string): Promise<void> {
 
 // Note operations - with database persistence
 export async function addNote(note: Note): Promise<void> {
+  // Store previous state for potential revert
+  const previousNotes = get(notesMap).get(note.date) || [];
+
   // Optimistically add to local state
   notesMap.update(map => {
     const dateNotes = map.get(note.date) || [];
@@ -70,11 +73,20 @@ export async function addNote(note: Note): Promise<void> {
   const saved = await saveNote(note);
   if (!saved) {
     console.error('Failed to save note to database');
-    // Could revert optimistic update here if needed
+    // Revert optimistic update
+    notesMap.update(map => {
+      map.set(note.date, previousNotes);
+      return new Map(map);
+    });
+    selectedNoteId.set(previousNotes.length > 0 ? previousNotes[0].id : null);
   }
 }
 
 export async function updateNote(updatedNote: Note): Promise<void> {
+  // Store previous state for potential revert
+  const previousNotes = get(notesMap).get(updatedNote.date) || [];
+  const previousNote = previousNotes.find(n => n.id === updatedNote.id);
+
   // Optimistically update local state
   notesMap.update(map => {
     const dateNotes = map.get(updatedNote.date) || [];
@@ -90,10 +102,21 @@ export async function updateNote(updatedNote: Note): Promise<void> {
   const saved = await updateNoteInDb(updatedNote);
   if (!saved) {
     console.error('Failed to update note in database');
+    // Revert optimistic update
+    if (previousNote) {
+      notesMap.update(map => {
+        map.set(updatedNote.date, previousNotes);
+        return new Map(map);
+      });
+    }
   }
 }
 
 export async function deleteNote(noteId: string, date: string): Promise<void> {
+  // Store previous state for potential revert
+  const previousNotes = get(notesMap).get(date) || [];
+  const previousSelectedId = get(selectedNoteId);
+
   // Optimistically remove from local state
   notesMap.update(map => {
     const dateNotes = map.get(date) || [];
@@ -106,7 +129,12 @@ export async function deleteNote(noteId: string, date: string): Promise<void> {
   const deleted = await deleteNoteFromDb(noteId, getTimestamp());
   if (!deleted) {
     console.error('Failed to delete note from database');
-    // Could revert optimistic update and reload here if needed
+    // Revert optimistic update
+    notesMap.update(map => {
+      map.set(date, previousNotes);
+      return new Map(map);
+    });
+    selectedNoteId.set(previousSelectedId);
   }
 }
 

@@ -73,26 +73,25 @@ export const effectiveTheme = writable<'light' | 'dark'>('light');
 export function initializeTheme(): void {
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-  function updateEffectiveTheme(settingsTheme: Theme): void {
+  function updateEffectiveTheme(settingsTheme: Theme, prefersDark: boolean): void {
     if (settingsTheme === 'system') {
-      effectiveTheme.set(mediaQuery.matches ? 'dark' : 'light');
+      effectiveTheme.set(prefersDark ? 'dark' : 'light');
     } else {
       effectiveTheme.set(settingsTheme);
     }
   }
 
-  // Subscribe to settings changes
+  // Subscribe to settings changes (single subscription)
   settings.subscribe($settings => {
-    updateEffectiveTheme($settings.app.theme);
+    updateEffectiveTheme($settings.app.theme, mediaQuery.matches);
   });
 
-  // Listen for system theme changes
+  // Listen for system theme changes - use get() to avoid creating new subscriptions
   mediaQuery.addEventListener('change', (e) => {
-    settings.subscribe($settings => {
-      if ($settings.app.theme === 'system') {
-        effectiveTheme.set(e.matches ? 'dark' : 'light');
-      }
-    });
+    const currentSettings = get(settings);
+    if (currentSettings.app.theme === 'system') {
+      effectiveTheme.set(e.matches ? 'dark' : 'light');
+    }
   });
 }
 
