@@ -1,6 +1,12 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { Note } from '../types';
-import { formatDateISO } from '../utils/date';
+import { formatDateISO, getTimestamp } from '../utils/date';
+import {
+  fetchNotesForDate,
+  saveNote,
+  updateNoteInDb,
+  deleteNoteFromDb,
+} from '../services/tauri';
 
 // Current date being viewed
 export const currentDate = writable<string>(formatDateISO(new Date()));
@@ -10,6 +16,9 @@ export const notesMap = writable<Map<string, Note[]>>(new Map());
 
 // Currently selected note ID
 export const selectedNoteId = writable<string | null>(null);
+
+// Loading state for notes
+export const notesLoading = writable<boolean>(false);
 
 // Notes for the current date
 export const currentNotes = derived(
@@ -28,17 +37,42 @@ export const selectedNote = derived(
   }
 );
 
-// Note operations
-export function addNote(note: Note): void {
+// Load notes from database for a specific date
+export async function loadNotesForDate(date: string): Promise<void> {
+  notesLoading.set(true);
+  try {
+    const notes = await fetchNotesForDate(date);
+    notesMap.update(map => {
+      map.set(date, notes);
+      return new Map(map);
+    });
+  } catch (error) {
+    console.error('Failed to load notes:', error);
+  } finally {
+    notesLoading.set(false);
+  }
+}
+
+// Note operations - with database persistence
+export async function addNote(note: Note): Promise<void> {
+  // Optimistically add to local state
   notesMap.update(map => {
     const dateNotes = map.get(note.date) || [];
     map.set(note.date, [...dateNotes, note]);
     return new Map(map);
   });
   selectedNoteId.set(note.id);
+
+  // Persist to database
+  const saved = await saveNote(note);
+  if (!saved) {
+    console.error('Failed to save note to database');
+    // Could revert optimistic update here if needed
+  }
 }
 
-export function updateNote(updatedNote: Note): void {
+export async function updateNote(updatedNote: Note): Promise<void> {
+  // Optimistically update local state
   notesMap.update(map => {
     const dateNotes = map.get(updatedNote.date) || [];
     const index = dateNotes.findIndex(n => n.id === updatedNote.id);
@@ -48,15 +82,29 @@ export function updateNote(updatedNote: Note): void {
     }
     return new Map(map);
   });
+
+  // Persist to database
+  const saved = await updateNoteInDb(updatedNote);
+  if (!saved) {
+    console.error('Failed to update note in database');
+  }
 }
 
-export function deleteNote(noteId: string, date: string): void {
+export async function deleteNote(noteId: string, date: string): Promise<void> {
+  // Optimistically remove from local state
   notesMap.update(map => {
     const dateNotes = map.get(date) || [];
     map.set(date, dateNotes.filter(n => n.id !== noteId));
     return new Map(map);
   });
   selectedNoteId.update(id => id === noteId ? null : id);
+
+  // Persist to database (soft delete)
+  const deleted = await deleteNoteFromDb(noteId, getTimestamp());
+  if (!deleted) {
+    console.error('Failed to delete note from database');
+    // Could revert optimistic update and reload here if needed
+  }
 }
 
 export function navigateToDate(date: string): void {
