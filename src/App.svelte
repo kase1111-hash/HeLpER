@@ -9,7 +9,7 @@
   import StatusBar from './components/StatusBar.svelte';
   import SettingsPanel from './components/SettingsPanel.svelte';
   import ToastContainer from './components/ToastContainer.svelte';
-  import { effectiveTheme, initializeTheme, settings } from './lib/stores/settings';
+  import { effectiveTheme, initializeTheme, initializeSettings, settings } from './lib/stores/settings';
   import { settingsOpen } from './lib/stores/ui';
   import { currentDate, loadNotesForDate } from './lib/stores/notes';
   import { ollamaStatus, refreshOllamaStatus } from './lib/stores/chat';
@@ -55,7 +55,10 @@
     updateInterval();
   }
 
-  onMount(() => {
+  onMount(async () => {
+    // Load persisted settings first (before other initialization that uses settings)
+    await initializeSettings();
+
     initializeTheme();
     // Force dark mode for earth tones
     document.documentElement.classList.add('dark');
@@ -72,9 +75,8 @@
     });
 
     // Check Ollama connection status and start periodic health checks
-    checkOllama().then(() => {
-      startHealthChecks();
-    });
+    await checkOllama();
+    startHealthChecks();
   });
 
   onDestroy(() => {
