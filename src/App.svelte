@@ -9,7 +9,8 @@
   import StatusBar from './components/StatusBar.svelte';
   import SettingsPanel from './components/SettingsPanel.svelte';
   import ToastContainer from './components/ToastContainer.svelte';
-  import { effectiveTheme, initializeTheme, initializeSettings, settings } from './lib/stores/settings';
+  import FirstRunWizard from './components/FirstRunWizard.svelte';
+  import { effectiveTheme, initializeTheme, initializeSettings, settings, settingsLoaded } from './lib/stores/settings';
   import { settingsOpen, closeAllPanels, focusSearch } from './lib/stores/ui';
   import { currentDate, loadNotesForDate, addNote } from './lib/stores/notes';
   import { createNote } from './lib/utils/note';
@@ -23,6 +24,16 @@
   let cleanupTrayListeners: (() => void) | null = null;
   let unsubscribeDate: (() => void) | null = null;
   let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  let showOnboarding = false;
+
+  // Check if we need to show onboarding after settings load
+  $: if ($settingsLoaded && !$settings.app.hasCompletedOnboarding) {
+    showOnboarding = true;
+  }
+
+  function handleOnboardingComplete() {
+    showOnboarding = false;
+  }
 
   function handleKeydown(event: KeyboardEvent) {
     const target = event.target as HTMLElement;
@@ -160,6 +171,11 @@
 
   <!-- Toast Notifications -->
   <ToastContainer />
+
+  <!-- First Run Wizard -->
+  {#if showOnboarding}
+    <FirstRunWizard onComplete={handleOnboardingComplete} />
+  {/if}
 </div>
 
 <style>
