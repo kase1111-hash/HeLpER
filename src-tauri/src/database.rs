@@ -74,21 +74,6 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
-    // Chat history table
-    sqlx::query(
-        r#"
-        CREATE TABLE IF NOT EXISTS chat_history (
-            id          TEXT PRIMARY KEY,
-            note_id     TEXT,
-            messages    TEXT NOT NULL,
-            created_at  TEXT NOT NULL,
-            FOREIGN KEY (note_id) REFERENCES notes(id)
-        )
-        "#,
-    )
-    .execute(pool)
-    .await?;
-
     // Settings table
     sqlx::query(
         r#"
