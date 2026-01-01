@@ -1,6 +1,6 @@
 # HeLpER User Guide
 
-**HeLpER** (Helpful Lightweight Personal Everyday Recorder) is a minimalist daily notes app with an AI assistant powered by Ollama.
+**HeLpER** (Helpful Lightweight Personal Everyday Recorder) is a minimalist daily notes app with an AI assistant, weather-aware journal context, and blockchain publishing capabilities.
 
 ---
 
@@ -9,10 +9,12 @@
 1. [Getting Started](#getting-started)
 2. [Daily Notes](#daily-notes)
 3. [AI Assistant](#ai-assistant)
-4. [Keyboard Shortcuts](#keyboard-shortcuts)
-5. [Settings](#settings)
-6. [Export & Backup](#export--backup)
-7. [Troubleshooting](#troubleshooting)
+4. [Journal Context](#journal-context)
+5. [NatLangChain Publishing](#natlangchain-publishing)
+6. [Keyboard Shortcuts](#keyboard-shortcuts)
+7. [Settings](#settings)
+8. [Export & Backup](#export--backup)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -25,13 +27,21 @@
   ```bash
   ollama pull llama3.2:3b
   ```
+- **WeatherAPI Key** (optional): For weather context, get a free key at [weatherapi.com](https://www.weatherapi.com/signup.aspx)
 
 ### First Launch
 
-1. Launch HeLpER from your applications menu
-2. The app opens to today's date
-3. Click **New Note** or press `Ctrl+N` to create your first note
-4. Start typing - notes save automatically
+When you first launch HeLpER, the onboarding wizard will guide you through:
+
+1. **Welcome Screen** - Introduction to HeLpER's key features
+2. **Theme Selection** - Choose between Light, Dark, or System theme
+3. **AI Setup** - Connect to Ollama for AI-powered features (optional)
+4. **Ready** - Keyboard shortcuts reference and a welcome note
+
+After onboarding:
+- The app opens to today's date
+- A welcome note is created with helpful tips
+- Start typing immediately - notes save automatically
 
 ---
 
@@ -52,7 +62,7 @@
 
 - Click any note in the list to select it
 - The editor shows your note content
-- Changes save automatically as you type
+- Changes save automatically as you type (auto-save delay configurable)
 - Character count displays in the corner (max 5,000)
 
 ### Searching Notes
@@ -110,6 +120,151 @@ Click **Retry** to reconnect if disconnected.
 
 ---
 
+## Journal Context
+
+HeLpER can display contextual information for your journal entries, including weather, time of day, and moon phases.
+
+### Enabling Weather
+
+1. Open Settings (`Ctrl+,`)
+2. Find the **Journal Context** section
+3. Toggle **Show weather & context in journal**
+4. Enter your WeatherAPI.com API key (get a free key [here](https://www.weatherapi.com/signup.aspx))
+5. Enter your location or click **Detect** for auto-detection
+
+### Weather Information
+
+When enabled, the Journal Context panel shows:
+
+| Field | Description |
+|-------|-------------|
+| **Temperature** | Current temperature in your preferred unit |
+| **Feels Like** | Apparent temperature |
+| **Condition** | Weather description (Clear, Cloudy, Rain, etc.) |
+| **Humidity** | Current humidity percentage |
+| **Wind** | Wind speed and direction |
+| **UV Index** | Current UV radiation level |
+| **Location** | Your configured or detected location |
+
+### Time Context
+
+The Journal Context also displays:
+
+- **Time of Day** - Morning, Afternoon, Evening, or Night
+- **Day of Week** - Current day name
+- **Moon Phase** - Current lunar phase (New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent)
+
+### Weather Icons
+
+| Icon | Condition |
+|------|-----------|
+| ☀️ | Clear (day) |
+| 🌙 | Clear (night) |
+| ⛅ | Partly Cloudy |
+| ☁️ | Cloudy/Overcast |
+| 🌧️ | Rain |
+| 🌦️ | Drizzle |
+| ❄️ | Snow |
+| ⛈️ | Thunderstorm |
+| 🌫️ | Fog/Mist |
+
+---
+
+## NatLangChain Publishing
+
+HeLpER integrates with NatLangChain, a blockchain-based publishing platform for monetizing your writing.
+
+### Enabling NatLangChain
+
+1. Open Settings (`Ctrl+,`)
+2. Find the **NatLangChain Publishing** section
+3. Toggle **Enable blockchain publishing**
+4. Enter the NatLangChain API URL
+5. Set your Author Name and Author ID
+6. Configure default monetization and visibility settings
+
+### Content Types
+
+NatLangChain supports three content types:
+
+| Type | Icon | Description |
+|------|------|-------------|
+| **Journal Entry** | 📝 | Personal journal entries and reflections |
+| **News Article** | 📰 | Journalism, news, reviews, and tutorials |
+| **Story Chapter** | 📖 | Serialized fiction and story chapters |
+
+### Publishing a Note
+
+1. Select a note you want to publish
+2. Open the Publish Panel
+3. Choose **Edit & Prepare** tab to refine your content:
+   - Select content type (Journal, Article, or Story)
+   - Add a title
+   - Edit the content
+   - Use AI editing tools (Polish, Clarify, Expand, Summarize)
+   - Set intent and tags
+   - For stories: Add series title, chapter number, genre
+   - For articles: Add headline, category, byline, sources
+4. Switch to **Publish on Chain** tab:
+   - Set monetization model
+   - Choose visibility
+   - Preview your entry
+   - Click **Validate** to check for issues
+   - Click **Publish** to submit to the blockchain
+
+### Monetization Models
+
+| Model | Description |
+|-------|-------------|
+| **Free** | Anyone can read |
+| **Subscription** | Only your subscribers can read |
+| **Pay Per Entry** | Readers pay a set price to access |
+| **Tip Jar** | Free to read with optional tips |
+
+### Visibility Options
+
+| Option | Description |
+|--------|-------------|
+| **Public** | Visible to everyone |
+| **Subscribers Only** | Only visible to your subscribers |
+| **Private (Draft)** | Hidden, saved as draft |
+
+### AI Editing Tools
+
+Before publishing, use AI to improve your content:
+
+| Tool | Description |
+|------|-------------|
+| **Polish** | Improve prose and make content publication-ready |
+| **Clarify** | Improve clarity and make intent clear |
+| **Expand** | Add more detail and context |
+| **Summarize** | Create a concise version |
+
+Each tool adapts its behavior based on the selected content type (journal, article, or story).
+
+### Story Chapters
+
+For serialized fiction:
+
+- **Series Title** - Name of your story series
+- **Genre** - Fiction, Fantasy, Sci-Fi, Mystery, Romance, etc.
+- **Chapter Number** - Automatically detected from content
+- **Total Chapters** - Set if known, or mark as "Ongoing"
+- **Synopsis** - Brief story description (for first chapter only)
+
+### News Articles
+
+For journalism and articles:
+
+- **Category** - News, Opinion, Analysis, Feature, Review, Tutorial, Interview
+- **Subcategory** - More specific topic area
+- **Byline** - Additional author information
+- **Dateline** - Location where news occurred
+- **Sources** - Attribution sources (comma-separated)
+- **Flags** - Breaking News, Opinion Piece, Analysis
+
+---
+
 ## Keyboard Shortcuts
 
 ### Global Shortcuts
@@ -142,11 +297,27 @@ Open Settings with `Ctrl+,` or click the gear icon in the status bar.
 - **Ollama URL**: API endpoint (default: `http://localhost:11434`)
 - **Model**: Which Ollama model to use (default: `llama3.2:3b`)
 
+### Journal Context
+
+- **Enable Weather**: Toggle weather and context display
+- **Weather API Key**: Your WeatherAPI.com API key
+- **Location**: City name, coordinates, or auto-detected
+- **Temperature Unit**: Celsius or Fahrenheit
+
 ### Behavior
 
-- **Minimize to tray on close**: Keep app running in system tray
+- **Minimize to tray on close**: Keep app running in system tray when closing
 - **Start minimized**: Launch directly to system tray
 - **Always on top**: Keep window above other applications
+
+### NatLangChain Publishing
+
+- **Enable blockchain publishing**: Toggle NatLangChain integration
+- **API URL**: NatLangChain API endpoint
+- **Author Name**: Your display name
+- **Author ID**: Unique identifier for earnings
+- **Default Monetization**: Free, Subscription, Pay Per Entry, or Tip Jar
+- **Validate before publishing**: Auto-validate entries before publishing
 
 ### Data
 
@@ -182,6 +353,7 @@ Open Settings with `Ctrl+,` or click the gear icon in the status bar.
     {
       "id": "...",
       "date": "2025-12-31",
+      "title": "My Note Title",
       "content": "Note content...",
       "createdAt": "...",
       "updatedAt": "..."
@@ -221,6 +393,19 @@ ollama pull <model-name>
 
 Replace `<model-name>` with the model shown in Settings (e.g., `llama3.2:3b`).
 
+### Weather Not Loading
+
+1. **Check API Key**: Ensure you have a valid WeatherAPI.com API key in Settings
+2. **Verify Location**: Make sure your location is set correctly
+3. **Click Refresh**: Use the refresh button in the Journal Context panel
+4. **Try Auto-Detect**: Click "Detect" to automatically find your location
+
+### NatLangChain Connection Issues
+
+1. **Test Connection**: Use the "Test" button in Settings to verify connectivity
+2. **Check API URL**: Ensure the NatLangChain API URL is correct
+3. **Verify Network**: Make sure you have internet access
+
 ### Notes Not Saving
 
 Notes auto-save after you stop typing. If notes aren't persisting:
@@ -256,7 +441,7 @@ HeLpER stores all data locally on your device:
 | macOS | `~/Library/Application Support/HeLpER/` |
 | Linux | `~/.local/share/helper/` |
 
-Your notes never leave your device unless you explicitly export them.
+Your notes never leave your device unless you explicitly export them or publish to NatLangChain.
 
 ---
 
