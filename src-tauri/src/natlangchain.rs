@@ -1,6 +1,7 @@
 use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use std::time::Duration;
 
 const API_TIMEOUT_SECS: u64 = 30;
@@ -90,29 +91,108 @@ pub struct ChainStats {
     pub views: u64,
 }
 
+// Request struct for NatLangChain API (minimal required fields)
+#[derive(Debug, Serialize)]
+struct ApiEntryRequest {
+    content: String,
+    author: String,
+    intent: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    metadata: Option<serde_json::Value>,
+}
+
+// NatLangChain validation response structures
+#[derive(Debug, Deserialize)]
+struct ApiSymbolicValidation {
+    valid: bool,
+    issues: Option<Vec<String>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ApiLlmValidationInner {
+    paraphrase: Option<String>,
+    intent_match: Option<bool>,
+    ambiguities: Option<Vec<String>>,
+    decision: Option<String>,
+    reasoning: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ApiLlmValidation {
+    status: Option<String>,
+    validation: Option<ApiLlmValidationInner>,
+}
+
 #[derive(Debug, Deserialize)]
 struct ApiValidationResponse {
-    valid: bool,
-    clarity_score: Option<f64>,
+    symbolic_validation: Option<ApiSymbolicValidation>,
+    llm_validation: Option<ApiLlmValidation>,
+    overall_decision: Option<String>,
+}
+
+// NatLangChain publish response structures
+#[derive(Debug, Deserialize)]
+struct ApiEntryInfo {
+    status: Option<String>,
+    message: Option<String>,
+    content: Option<String>,
+    author: Option<String>,
     intent: Option<String>,
-    suggestions: Option<Vec<String>>,
-    warnings: Option<Vec<String>>,
+    timestamp: Option<String>,
+    validation_status: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct ApiPublishResponse {
-    success: bool,
-    entry_id: Option<String>,
+    status: Option<String>,
+    entry: Option<ApiEntryInfo>,
     block_hash: Option<String>,
     error: Option<String>,
 }
 
+// NatLangChain author entries response
 #[derive(Debug, Deserialize)]
-struct ApiStatsResponse {
-    entries: Option<u64>,
-    earnings: Option<f64>,
-    subscribers: Option<u64>,
-    views: Option<u64>,
+struct ApiAuthorEntriesResponse {
+    author: Option<String>,
+    count: Option<u64>,
+}
+
+// NatLangChain global stats response
+#[derive(Debug, Deserialize)]
+struct ApiGlobalStatsResponse {
+    total_entries: Option<u64>,
+    validated_entries: Option<u64>,
+    unique_authors: Option<u64>,
+}
+
+/// Build metadata JSON from entry for NatLangChain API
+fn build_metadata(entry: &NatLangChainEntry) -> Option<serde_json::Value> {
+    let mut metadata = serde_json::Map::new();
+
+    if let Some(title) = &entry.title {
+        metadata.insert("title".to_string(), serde_json::json!(title));
+    }
+    if let Some(tags) = &entry.tags {
+        metadata.insert("tags".to_string(), serde_json::json!(tags));
+    }
+    metadata.insert("content_type".to_string(), serde_json::json!(&entry.content_type));
+    metadata.insert("monetization".to_string(), serde_json::json!(&entry.monetization));
+    if let Some(price) = entry.price {
+        metadata.insert("price".to_string(), serde_json::json!(price));
+    }
+    metadata.insert("visibility".to_string(), serde_json::json!(&entry.visibility));
+    if let Some(context) = &entry.context {
+        metadata.insert("context".to_string(), serde_json::to_value(context).unwrap_or_default());
+    }
+    if let Some(story) = &entry.story_metadata {
+        metadata.insert("story_metadata".to_string(), serde_json::to_value(story).unwrap_or_default());
+    }
+    if let Some(article) = &entry.article_metadata {
+        metadata.insert("article_metadata".to_string(), serde_json::to_value(article).unwrap_or_default());
+    }
+    metadata.insert("created_at".to_string(), serde_json::json!(&entry.created_at));
+
+    Some(serde_json::Value::Object(metadata))
 }
 
 /// Validate an entry before publishing
@@ -127,9 +207,17 @@ pub async fn validate_entry(
 
     let url = format!("{}/entry/validate", api_url.trim_end_matches('/'));
 
+    // Build request with only fields NatLangChain expects
+    let request = ApiEntryRequest {
+        content: entry.content.clone(),
+        author: entry.author.clone(),
+        intent: entry.intent.clone(),
+        metadata: build_metadata(entry),
+    };
+
     let response = client
         .post(&url)
-        .json(entry)
+        .json(&request)
         .send()
         .await
         .map_err(|e| format!("Validation request failed: {}", e))?;
@@ -145,12 +233,42 @@ pub async fn validate_entry(
         .await
         .map_err(|e| format!("Failed to parse validation response: {}", e))?;
 
+    // Parse NatLangChain response format
+    let valid = api_response.overall_decision
+        .as_ref()
+        .map(|d| d == "VALID")
+        .unwrap_or(false);
+
+    // Extract intent from LLM validation paraphrase
+    let intent_detected = api_response.llm_validation
+        .as_ref()
+        .and_then(|v| v.validation.as_ref())
+        .and_then(|v| v.paraphrase.clone())
+        .unwrap_or_else(|| entry.intent.clone());
+
+    // Collect issues as warnings
+    let mut warnings: Vec<String> = Vec::new();
+    if let Some(sym) = &api_response.symbolic_validation {
+        if let Some(issues) = &sym.issues {
+            warnings.extend(issues.clone());
+        }
+    }
+
+    // Collect ambiguities as suggestions
+    let suggestions = api_response.llm_validation
+        .as_ref()
+        .and_then(|v| v.validation.as_ref())
+        .and_then(|v| v.ambiguities.clone());
+
+    // Calculate clarity score from validation results
+    let clarity_score = if valid { 1.0 } else if warnings.is_empty() { 0.7 } else { 0.4 };
+
     Ok(ValidationResult {
-        valid: api_response.valid,
-        clarity_score: api_response.clarity_score.unwrap_or(0.0),
-        intent_detected: api_response.intent.unwrap_or_else(|| "unknown".to_string()),
-        suggestions: api_response.suggestions,
-        warnings: api_response.warnings,
+        valid,
+        clarity_score,
+        intent_detected,
+        suggestions,
+        warnings: if warnings.is_empty() { None } else { Some(warnings) },
     })
 }
 
@@ -166,9 +284,17 @@ pub async fn publish_entry(
 
     let url = format!("{}/entry", api_url.trim_end_matches('/'));
 
+    // Build request with only fields NatLangChain expects
+    let request = ApiEntryRequest {
+        content: entry.content.clone(),
+        author: entry.author.clone(),
+        intent: entry.intent.clone(),
+        metadata: build_metadata(entry),
+    };
+
     let response = client
         .post(&url)
-        .json(entry)
+        .json(&request)
         .send()
         .await
         .map_err(|e| format!("Publish request failed: {}", e))?;
@@ -190,13 +316,24 @@ pub async fn publish_entry(
         .await
         .map_err(|e| format!("Failed to parse publish response: {}", e))?;
 
-    let transaction_url = api_response.entry_id.as_ref().map(|id| {
-        format!("{}/entries/{}", api_url.trim_end_matches('/'), id)
+    // NatLangChain returns status: "success" or "failure"
+    let success = api_response.status
+        .as_ref()
+        .map(|s| s == "success")
+        .unwrap_or(false);
+
+    // Extract entry timestamp as a pseudo-ID if available
+    let entry_id = api_response.entry
+        .as_ref()
+        .and_then(|e| e.timestamp.clone());
+
+    let transaction_url = entry_id.as_ref().map(|_| {
+        format!("{}/entries/author/{}", api_url.trim_end_matches('/'), entry.author)
     });
 
     Ok(PublishResult {
-        success: api_response.success,
-        entry_id: api_response.entry_id,
+        success,
+        entry_id,
         block_hash: api_response.block_hash,
         error: api_response.error,
         transaction_url,
@@ -204,6 +341,8 @@ pub async fn publish_entry(
 }
 
 /// Get author stats from the chain
+/// Note: NatLangChain doesn't track earnings/subscribers/views - these are HeLpER-specific
+/// The API only provides entry count for the author
 pub async fn get_author_stats(
     api_url: &str,
     author_id: &str,
@@ -213,8 +352,9 @@ pub async fn get_author_stats(
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
+    // Use the correct NatLangChain endpoint
     let url = format!(
-        "{}/entries/author/{}/stats",
+        "{}/entries/author/{}",
         api_url.trim_end_matches('/'),
         author_id
     );
@@ -235,16 +375,17 @@ pub async fn get_author_stats(
         });
     }
 
-    let api_response: ApiStatsResponse = response
+    let api_response: ApiAuthorEntriesResponse = response
         .json()
         .await
-        .map_err(|e| format!("Failed to parse stats response: {}", e))?;
+        .map_err(|e| format!("Failed to parse author entries response: {}", e))?;
 
+    // NatLangChain only provides entry count - other fields are placeholders
     Ok(ChainStats {
-        total_entries: api_response.entries.unwrap_or(0),
-        total_earnings: api_response.earnings.unwrap_or(0.0),
-        subscribers: api_response.subscribers.unwrap_or(0),
-        views: api_response.views.unwrap_or(0),
+        total_entries: api_response.count.unwrap_or(0),
+        total_earnings: 0.0, // Not tracked by NatLangChain
+        subscribers: 0,      // Not tracked by NatLangChain
+        views: 0,            // Not tracked by NatLangChain
     })
 }
 

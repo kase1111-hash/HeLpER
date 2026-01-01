@@ -252,10 +252,10 @@ export interface NatLangChainPublishResult {
 }
 
 export interface NatLangChainStats {
-  totalEntries: number;
-  totalEarnings: number;
-  subscribers: number;
-  views: number;
+  totalEntries: number; // Provided by NatLangChain
+  totalEarnings: number; // Not tracked by NatLangChain - always 0
+  subscribers: number; // Not tracked by NatLangChain - always 0
+  views: number; // Not tracked by NatLangChain - always 0
 }
 
 export interface NatLangChainSettings {
