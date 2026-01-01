@@ -171,6 +171,43 @@ export interface WeatherSettings {
 // NatLangChain types
 export type MonetizationModel = 'free' | 'subscription' | 'per_entry' | 'tip_jar';
 export type EntryVisibility = 'public' | 'subscribers_only' | 'private';
+export type ContentType = 'journal' | 'article' | 'story_chapter';
+
+// Story/Series metadata for serialized fiction
+export interface StoryMetadata {
+  seriesId?: string;
+  seriesTitle: string;
+  chapterNumber: number;
+  totalChapters?: number; // Optional if ongoing
+  genre: string;
+  isOngoing: boolean;
+  synopsis?: string; // Brief story synopsis for first chapter
+  previousChapterId?: string;
+  nextChapterId?: string;
+}
+
+// News article metadata
+export interface ArticleMetadata {
+  headline: string;
+  byline?: string; // Additional author info
+  category: ArticleCategory;
+  subcategory?: string;
+  dateline?: string; // Location where news occurred
+  sources?: string[]; // Attribution sources
+  isBreaking?: boolean;
+  isOpinion?: boolean;
+  isAnalysis?: boolean;
+}
+
+export type ArticleCategory =
+  | 'news'
+  | 'opinion'
+  | 'analysis'
+  | 'feature'
+  | 'review'
+  | 'tutorial'
+  | 'interview'
+  | 'other';
 
 export interface NatLangChainEntry {
   id?: string;
@@ -179,6 +216,7 @@ export interface NatLangChainEntry {
   intent: string;
   title?: string;
   tags?: string[];
+  contentType: ContentType;
   monetization: MonetizationModel;
   price?: number;
   visibility: EntryVisibility;
@@ -189,6 +227,10 @@ export interface NatLangChainEntry {
     date: string;
     timeOfDay: string;
   };
+  // Story chapter metadata (when contentType === 'story_chapter')
+  storyMetadata?: StoryMetadata;
+  // Article metadata (when contentType === 'article')
+  articleMetadata?: ArticleMetadata;
   createdAt: string;
   hash?: string;
 }

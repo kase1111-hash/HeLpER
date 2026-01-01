@@ -17,16 +17,47 @@ pub struct EntryContext {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct StoryMetadata {
+    pub series_id: Option<String>,
+    pub series_title: String,
+    pub chapter_number: u32,
+    pub total_chapters: Option<u32>,
+    pub genre: String,
+    pub is_ongoing: bool,
+    pub synopsis: Option<String>,
+    pub previous_chapter_id: Option<String>,
+    pub next_chapter_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArticleMetadata {
+    pub headline: String,
+    pub byline: Option<String>,
+    pub category: String,
+    pub subcategory: Option<String>,
+    pub dateline: Option<String>,
+    pub sources: Option<Vec<String>>,
+    pub is_breaking: Option<bool>,
+    pub is_opinion: Option<bool>,
+    pub is_analysis: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NatLangChainEntry {
     pub author: String,
     pub content: String,
     pub intent: String,
     pub title: Option<String>,
     pub tags: Option<Vec<String>>,
+    pub content_type: String,
     pub monetization: String,
     pub price: Option<f64>,
     pub visibility: String,
     pub context: Option<EntryContext>,
+    pub story_metadata: Option<StoryMetadata>,
+    pub article_metadata: Option<ArticleMetadata>,
     pub created_at: String,
 }
 
@@ -239,10 +270,13 @@ pub fn create_entry(
     intent: String,
     title: Option<String>,
     tags: Option<Vec<String>>,
+    content_type: String,
     monetization: String,
     price: Option<f64>,
     visibility: String,
     context: Option<EntryContext>,
+    story_metadata: Option<StoryMetadata>,
+    article_metadata: Option<ArticleMetadata>,
 ) -> NatLangChainEntry {
     NatLangChainEntry {
         author,
@@ -250,10 +284,13 @@ pub fn create_entry(
         intent,
         title,
         tags,
+        content_type,
         monetization,
         price,
         visibility,
         context,
+        story_metadata,
+        article_metadata,
         created_at: Utc::now().to_rfc3339(),
     }
 }
