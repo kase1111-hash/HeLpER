@@ -23,6 +23,7 @@
   import { createNote } from './lib/utils/note';
   import { ollamaStatus, refreshOllamaStatus } from './lib/stores/chat';
   import { setupTrayListeners } from './lib/services/tauri';
+  import { initializeWeather } from './lib/stores/weather';
   import { OLLAMA_HEALTH_CHECK_INTERVAL_MS, OLLAMA_RETRY_INTERVAL_MS } from './lib/constants';
 
   let cleanupTrayListeners: (() => void) | null = null;
@@ -130,6 +131,9 @@
     // Check Ollama connection status and start periodic health checks
     await checkOllama();
     startHealthChecks();
+
+    // Initialize weather context
+    initializeWeather();
   });
 
   onDestroy(() => {

@@ -6,6 +6,7 @@ import {
   DEFAULT_AI_SETTINGS,
   DEFAULT_DATA_SETTINGS,
   DEFAULT_NOTIFICATION_SETTINGS,
+  DEFAULT_WEATHER_SETTINGS,
 } from '../constants';
 
 const SETTINGS_STORE_PATH = 'settings.json';
@@ -23,6 +24,7 @@ export const settings = writable<Settings>({
   ai: { ...DEFAULT_AI_SETTINGS },
   data: { ...DEFAULT_DATA_SETTINGS },
   notifications: { ...DEFAULT_NOTIFICATION_SETTINGS },
+  weather: { ...DEFAULT_WEATHER_SETTINGS },
 });
 
 // Initialize persistent store and load settings
@@ -38,6 +40,7 @@ export async function initializeSettings(): Promise<void> {
         ai: { ...DEFAULT_AI_SETTINGS, ...savedSettings.ai },
         data: { ...DEFAULT_DATA_SETTINGS, ...savedSettings.data },
         notifications: { ...DEFAULT_NOTIFICATION_SETTINGS, ...savedSettings.notifications },
+        weather: { ...DEFAULT_WEATHER_SETTINGS, ...savedSettings.weather },
       });
     }
 
@@ -104,6 +107,7 @@ export function updateSettings(partial: Partial<Settings>): void {
     ai: { ...s.ai, ...partial.ai },
     data: { ...s.data, ...partial.data },
     notifications: { ...s.notifications, ...partial.notifications },
+    weather: { ...s.weather, ...partial.weather },
   }));
   // Persist to disk
   saveSettings();
@@ -116,6 +120,7 @@ export function resetSettings(): void {
     ai: { ...DEFAULT_AI_SETTINGS },
     data: { ...DEFAULT_DATA_SETTINGS },
     notifications: { ...DEFAULT_NOTIFICATION_SETTINGS },
+    weather: { ...DEFAULT_WEATHER_SETTINGS },
   });
   // Persist to disk
   saveSettings();

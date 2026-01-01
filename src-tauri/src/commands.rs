@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 use crate::database::DbPool;
 use crate::ollama;
+use crate::weather;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -164,4 +165,28 @@ pub async fn send_chat_message(
     max_tokens: u32,
 ) -> Result<ChatMessage, String> {
     ollama::send_message(&url, &model, messages, temperature, max_tokens).await
+}
+
+/// Get current weather data
+#[tauri::command]
+pub async fn get_weather(
+    api_key: String,
+    location: String,
+) -> Result<weather::WeatherData, String> {
+    weather::fetch_weather(&api_key, &location).await
+}
+
+/// Auto-detect location from IP
+#[tauri::command]
+pub async fn detect_location() -> Result<String, String> {
+    weather::detect_location().await
+}
+
+/// Get full journal context (weather + time info)
+#[tauri::command]
+pub async fn get_journal_context(
+    api_key: String,
+    location: String,
+) -> Result<weather::JournalContext, String> {
+    weather::get_journal_context(&api_key, &location).await
 }

@@ -96,6 +96,7 @@ export interface Settings {
   ai: AISettings;
   data: DataSettings;
   notifications: NotificationSettings;
+  weather: WeatherSettings;
 }
 
 // Quick action types
@@ -114,4 +115,54 @@ export interface WindowState {
   x: number;
   y: number;
   maximized: boolean;
+}
+
+// Weather types
+export type WeatherCondition =
+  | 'clear'
+  | 'partly_cloudy'
+  | 'cloudy'
+  | 'overcast'
+  | 'mist'
+  | 'rain'
+  | 'drizzle'
+  | 'snow'
+  | 'thunderstorm'
+  | 'fog'
+  | 'unknown';
+
+export type TemperatureUnit = 'celsius' | 'fahrenheit';
+
+export interface WeatherData {
+  location: string;
+  tempCelsius: number;
+  tempFahrenheit: number;
+  feelsLikeCelsius: number;
+  feelsLikeFahrenheit: number;
+  condition: WeatherCondition;
+  conditionText: string;
+  humidity: number;
+  windKph: number;
+  windMph: number;
+  windDirection: string;
+  pressure: number;
+  uvIndex: number;
+  visibility: number;
+  isDay: boolean;
+  timestamp: string;
+}
+
+export interface JournalContext {
+  weather?: WeatherData;
+  dayOfWeek: string;
+  timeOfDay: string;
+  moonPhase?: string;
+}
+
+export interface WeatherSettings {
+  enabled: boolean;
+  location: string;
+  autoDetectLocation: boolean;
+  temperatureUnit: TemperatureUnit;
+  apiKey: string;
 }

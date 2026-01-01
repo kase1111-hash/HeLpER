@@ -3,9 +3,56 @@
   import { settingsOpen, toggleSettings, showToast } from '../lib/stores/ui';
   import { allNotes } from '../lib/stores/notes';
   import { exportNotes, backupAllData } from '../lib/services/export';
-  import type { Theme } from '../lib/types';
+  import { detectLocation } from '../lib/services/weather';
+  import { forceRefreshWeather, detectedLocation } from '../lib/stores/weather';
+  import type { Theme, TemperatureUnit } from '../lib/types';
 
   let exporting = false;
+  let detectingLocation = false;
+
+  async function handleDetectLocation() {
+    detectingLocation = true;
+    try {
+      const location = await detectLocation();
+      if (location) {
+        detectedLocation.set(location);
+        updateSettings({
+          weather: { ...$settings.weather, location },
+        });
+        showToast({ type: 'success', message: `Location detected: ${location}` });
+        await forceRefreshWeather();
+      } else {
+        showToast({ type: 'error', message: 'Could not detect location' });
+      }
+    } catch (error) {
+      showToast({ type: 'error', message: 'Failed to detect location' });
+    } finally {
+      detectingLocation = false;
+    }
+  }
+
+  function handleWeatherLocationChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    updateSettings({
+      weather: { ...$settings.weather, location: target.value },
+    });
+  }
+
+  function handleWeatherApiKeyChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    updateSettings({
+      weather: { ...$settings.weather, apiKey: target.value },
+    });
+    // Refresh weather after API key change
+    forceRefreshWeather();
+  }
+
+  function handleTemperatureUnitChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    updateSettings({
+      weather: { ...$settings.weather, temperatureUnit: target.value as TemperatureUnit },
+    });
+  }
 
   async function handleExport(format: 'markdown' | 'json') {
     if (exporting) return;
@@ -169,6 +216,103 @@
               placeholder="llama3.2:3b"
             />
           </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- Weather Section -->
+      <section>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
+          Journal Context
+        </h3>
+        <div class="space-y-4">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative">
+              <input
+                type="checkbox"
+                checked={$settings.weather.enabled}
+                on:change={(e) =>
+                  updateSettings({
+                    weather: { ...$settings.weather, enabled: e.currentTarget.checked },
+                  })}
+                class="sr-only peer"
+              />
+              <div
+                class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+              ></div>
+            </div>
+            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+              >Show weather & context in journal</span
+            >
+          </label>
+
+          {#if $settings.weather.enabled}
+            <div>
+              <label for="weather-api-key" class="text-sm text-earth-200 block mb-1.5">
+                Weather API Key
+                <a
+                  href="https://www.weatherapi.com/signup.aspx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs text-accent hover:underline ml-1"
+                >(Get free key)</a>
+              </label>
+              <input
+                id="weather-api-key"
+                type="password"
+                value={$settings.weather.apiKey}
+                on:change={handleWeatherApiKeyChange}
+                class="input text-sm"
+                placeholder="Enter your WeatherAPI.com key"
+              />
+            </div>
+
+            <div>
+              <label for="weather-location" class="text-sm text-earth-200 block mb-1.5">Location</label>
+              <div class="flex gap-2">
+                <input
+                  id="weather-location"
+                  type="text"
+                  value={$settings.weather.location}
+                  on:change={handleWeatherLocationChange}
+                  class="input text-sm flex-1"
+                  placeholder="City name or coordinates"
+                />
+                <button
+                  on:click={handleDetectLocation}
+                  disabled={detectingLocation}
+                  class="btn btn-secondary text-sm px-3 whitespace-nowrap"
+                  title="Auto-detect location from IP"
+                >
+                  {#if detectingLocation}
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                  {:else}
+                    Detect
+                  {/if}
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <label for="temp-unit" class="text-sm text-earth-200">Temperature Unit</label>
+              <select
+                id="temp-unit"
+                value={$settings.weather.temperatureUnit}
+                on:change={handleTemperatureUnitChange}
+                class="input w-32 text-sm py-1.5"
+              >
+                <option value="celsius">Celsius</option>
+                <option value="fahrenheit">Fahrenheit</option>
+              </select>
+            </div>
+          {/if}
         </div>
       </section>
 
