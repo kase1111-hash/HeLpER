@@ -10,10 +10,24 @@
     noteToEntry,
     getMonetizationLabel,
     getVisibilityLabel,
+    getContentTypeLabel,
+    getContentTypeIcon,
     formatPrice,
     suggestIntent,
+    detectContentType,
+    getDefaultTags,
+    extractChapterNumber,
   } from '../lib/services/natlangchain';
-  import type { Note, MonetizationModel, EntryVisibility, NatLangChainValidation } from '../lib/types';
+  import type {
+    Note,
+    MonetizationModel,
+    EntryVisibility,
+    NatLangChainValidation,
+    ContentType,
+    StoryMetadata,
+    ArticleMetadata,
+    ArticleCategory,
+  } from '../lib/types';
 
   export let note: Note;
   export let open = false;
@@ -25,9 +39,29 @@
   let title = '';
   let intent = '';
   let tags = '';
+  let contentType: ContentType = 'journal';
   let monetization: MonetizationModel = 'free';
   let visibility: EntryVisibility = 'public';
   let price = 0;
+
+  // Story metadata state
+  let seriesTitle = '';
+  let chapterNumber = 1;
+  let totalChapters: number | undefined = undefined;
+  let genre = 'fiction';
+  let isOngoing = true;
+  let synopsis = '';
+
+  // Article metadata state
+  let headline = '';
+  let byline = '';
+  let articleCategory: ArticleCategory = 'news';
+  let subcategory = '';
+  let dateline = '';
+  let sources = '';
+  let isBreaking = false;
+  let isOpinion = false;
+  let isAnalysis = false;
 
   // UI state
   let validating = false;
@@ -36,15 +70,58 @@
   let validation: NatLangChainValidation | null = null;
   let activeTab: 'edit' | 'preview' | 'settings' = 'edit';
 
+  const genres = [
+    'fiction',
+    'fantasy',
+    'science-fiction',
+    'mystery',
+    'romance',
+    'thriller',
+    'horror',
+    'literary',
+    'historical',
+    'adventure',
+  ];
+
+  const articleCategories: ArticleCategory[] = [
+    'news',
+    'opinion',
+    'analysis',
+    'feature',
+    'review',
+    'tutorial',
+    'interview',
+    'other',
+  ];
+
   // Initialize form when note changes
   $: if (note && open) {
     editedContent = note.content;
     title = note.title || '';
-    intent = suggestIntent(note.content);
+    contentType = detectContentType(note.content);
+    intent = suggestIntent(note.content, contentType);
+    tags = getDefaultTags(contentType).join(', ');
     monetization = $settings.natLangChain.defaultMonetization;
     visibility = $settings.natLangChain.defaultVisibility;
     price = $settings.natLangChain.defaultPrice;
     validation = null;
+
+    // Auto-detect chapter number for stories
+    if (contentType === 'story_chapter') {
+      const detected = extractChapterNumber(note.content);
+      if (detected) chapterNumber = detected;
+    }
+
+    // Use title as headline for articles
+    if (contentType === 'article' && note.title) {
+      headline = note.title;
+    }
+  }
+
+  // Update intent when content type changes
+  function handleContentTypeChange() {
+    intent = suggestIntent(editedContent, contentType);
+    tags = getDefaultTags(contentType).join(', ');
   }
 
   function handleClose() {
@@ -56,6 +133,34 @@
     if (event.target === event.currentTarget) {
       handleClose();
     }
+  }
+
+  // Build metadata objects
+  function buildStoryMetadata(): StoryMetadata | undefined {
+    if (contentType !== 'story_chapter') return undefined;
+    return {
+      seriesTitle,
+      chapterNumber,
+      totalChapters: isOngoing ? undefined : totalChapters,
+      genre,
+      isOngoing,
+      synopsis: chapterNumber === 1 ? synopsis : undefined,
+    };
+  }
+
+  function buildArticleMetadata(): ArticleMetadata | undefined {
+    if (contentType !== 'article') return undefined;
+    return {
+      headline: headline || title,
+      byline: byline || undefined,
+      category: articleCategory,
+      subcategory: subcategory || undefined,
+      dateline: dateline || undefined,
+      sources: sources ? sources.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
+      isBreaking,
+      isOpinion,
+      isAnalysis,
+    };
   }
 
   async function handleValidate() {
@@ -70,10 +175,13 @@
         { ...note, content: editedContent, title },
         $settings.natLangChain.authorId || 'anonymous',
         intent,
+        contentType,
         monetization,
         visibility,
         price,
-        $journalContext
+        $journalContext,
+        buildStoryMetadata(),
+        buildArticleMetadata()
       );
 
       validation = await validateEntry($settings.natLangChain.apiUrl, entry);
@@ -111,16 +219,20 @@
         { ...note, content: editedContent, title },
         $settings.natLangChain.authorId || $settings.natLangChain.authorName || 'anonymous',
         intent,
+        contentType,
         monetization,
         visibility,
         price,
-        $journalContext
+        $journalContext,
+        buildStoryMetadata(),
+        buildArticleMetadata()
       );
 
       const result = await publishEntry($settings.natLangChain.apiUrl, entry);
 
       if (result.success) {
-        showToast({ type: 'success', message: 'Published to NatLangChain!' });
+        const typeLabel = getContentTypeLabel(contentType);
+        showToast({ type: 'success', message: `${typeLabel} published to NatLangChain!` });
         handleClose();
       } else {
         showToast({ type: 'error', message: result.error || 'Failed to publish' });
@@ -138,20 +250,43 @@
       return;
     }
 
-    const prompts: Record<string, string> = {
-      polish: `Polish this journal entry for publication. Make it more engaging while keeping the authentic voice. Keep it personal but publication-ready:\n\n${editedContent}`,
-      clarify: `Clarify and improve the clarity of this journal entry. Make the intent clear while preserving the personal voice:\n\n${editedContent}`,
-      expand: `Expand this journal entry with more detail and context. Add depth while keeping it authentic:\n\n${editedContent}`,
-      summarize: `Create a concise version of this journal entry, keeping the key insights and personal touch:\n\n${editedContent}`,
+    // Content-type-specific prompts
+    const promptsByType: Record<ContentType, Record<string, string>> = {
+      journal: {
+        polish: `Polish this journal entry for publication. Make it more engaging while keeping the authentic voice. Keep it personal but publication-ready:\n\n${editedContent}`,
+        clarify: `Clarify and improve the clarity of this journal entry. Make the intent clear while preserving the personal voice:\n\n${editedContent}`,
+        expand: `Expand this journal entry with more detail and context. Add depth while keeping it authentic:\n\n${editedContent}`,
+        summarize: `Create a concise version of this journal entry, keeping the key insights and personal touch:\n\n${editedContent}`,
+      },
+      article: {
+        polish: `Polish this news article for publication. Ensure it follows journalistic standards with clear, objective language. Maintain factual accuracy and proper attribution:\n\n${editedContent}`,
+        clarify: `Improve the clarity of this article. Ensure the lead paragraph captures the key points. Make facts and sources clear:\n\n${editedContent}`,
+        expand: `Expand this article with additional context, background information, and analysis. Add relevant details that inform readers:\n\n${editedContent}`,
+        summarize: `Create a concise summary of this article suitable for a news brief. Capture the essential who, what, when, where, why:\n\n${editedContent}`,
+      },
+      story_chapter: {
+        polish: `Polish this story chapter for publication. Enhance the prose, improve pacing, and strengthen the narrative voice while preserving the story:\n\n${editedContent}`,
+        clarify: `Improve the clarity of this story chapter. Ensure character motivations are clear and scenes are well-described. Maintain narrative flow:\n\n${editedContent}`,
+        expand: `Expand this story chapter with richer descriptions, deeper character development, and more atmospheric detail:\n\n${editedContent}`,
+        summarize: `Create a more concise version of this chapter, tightening the prose while keeping key plot points and emotional beats:\n\n${editedContent}`,
+      },
     };
+
+    const prompts = promptsByType[contentType];
 
     aiEditing = true;
     try {
+      const systemPrompts: Record<ContentType, string> = {
+        journal: 'You are a helpful writing assistant for personal journals. Output only the improved text, no explanations.',
+        article: 'You are an experienced news editor. Output only the improved article text, no explanations.',
+        story_chapter: 'You are a fiction editor specializing in serialized stories. Output only the improved text, no explanations.',
+      };
+
       const response = await sendChatMessage(
         $settings.ai.ollamaUrl,
         $settings.ai.model,
         [
-          { role: 'system', content: 'You are a helpful writing assistant. Output only the improved text, no explanations.', timestamp: new Date().toISOString() },
+          { role: 'system', content: systemPrompts[contentType], timestamp: new Date().toISOString() },
           { role: 'user', content: prompts[action], timestamp: new Date().toISOString() },
         ],
         $settings.ai.temperature,
@@ -171,9 +306,21 @@
 
   async function handleSuggestIntent() {
     if (!$settings.ai.ollamaUrl) {
-      intent = suggestIntent(editedContent);
+      intent = suggestIntent(editedContent, contentType);
       return;
     }
+
+    const systemPromptsByType: Record<ContentType, string> = {
+      journal: 'You suggest the intent of journal entries for blockchain publication. Be concise (1 sentence). Format: "Sharing..." or "Documenting..." or "Expressing..."',
+      article: 'You suggest the intent of news articles for blockchain publication. Be concise (1 sentence). Format: "Reporting..." or "Analyzing..." or "Investigating..."',
+      story_chapter: 'You suggest the intent of story chapters for blockchain publication. Be concise (1 sentence). Format: "Beginning..." or "Continuing..." or "Concluding..."',
+    };
+
+    const typeLabels: Record<ContentType, string> = {
+      journal: 'journal entry',
+      article: 'news article',
+      story_chapter: 'story chapter',
+    };
 
     aiEditing = true;
     try {
@@ -181,8 +328,8 @@
         $settings.ai.ollamaUrl,
         $settings.ai.model,
         [
-          { role: 'system', content: 'You suggest the intent of journal entries for blockchain publication. Be concise (1 sentence). Format: "Sharing..." or "Documenting..." or "Expressing..."', timestamp: new Date().toISOString() },
-          { role: 'user', content: `What is the intent of this entry?\n\n${editedContent}`, timestamp: new Date().toISOString() },
+          { role: 'system', content: systemPromptsByType[contentType], timestamp: new Date().toISOString() },
+          { role: 'user', content: `What is the intent of this ${typeLabels[contentType]}?\n\n${editedContent}`, timestamp: new Date().toISOString() },
         ],
         0.3,
         100
@@ -192,7 +339,7 @@
         intent = response.content.trim();
       }
     } catch (error) {
-      intent = suggestIntent(editedContent);
+      intent = suggestIntent(editedContent, contentType);
     } finally {
       aiEditing = false;
     }
@@ -213,10 +360,10 @@
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-earth-600/50">
         <div class="flex items-center gap-3">
-          <span class="text-xl">📝</span>
+          <span class="text-xl">{getContentTypeIcon(contentType)}</span>
           <div>
             <h2 class="text-lg font-semibold text-earth-50">Publish to NatLangChain</h2>
-            <p class="text-xs text-earth-400">Monetize your journal entry on the blockchain</p>
+            <p class="text-xs text-earth-400">Monetize your {getContentTypeLabel(contentType).toLowerCase()} on the blockchain</p>
           </div>
         </div>
         <button
@@ -266,15 +413,57 @@
       <!-- Content -->
       <div class="flex-1 overflow-y-auto p-5">
         {#if activeTab === 'edit'}
+          <!-- Content Type Selector -->
+          <div class="mb-4">
+            <label class="text-sm text-earth-200 block mb-2">Content Type</label>
+            <div class="flex gap-2">
+              <button
+                on:click={() => { contentType = 'journal'; handleContentTypeChange(); }}
+                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-all"
+                class:bg-accent={contentType === 'journal'}
+                class:text-earth-900={contentType === 'journal'}
+                class:bg-earth-700={contentType !== 'journal'}
+                class:text-earth-300={contentType !== 'journal'}
+                class:hover:bg-earth-600={contentType !== 'journal'}
+              >
+                <span>📝</span> Journal
+              </button>
+              <button
+                on:click={() => { contentType = 'article'; handleContentTypeChange(); }}
+                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-all"
+                class:bg-accent={contentType === 'article'}
+                class:text-earth-900={contentType === 'article'}
+                class:bg-earth-700={contentType !== 'article'}
+                class:text-earth-300={contentType !== 'article'}
+                class:hover:bg-earth-600={contentType !== 'article'}
+              >
+                <span>📰</span> Article
+              </button>
+              <button
+                on:click={() => { contentType = 'story_chapter'; handleContentTypeChange(); }}
+                class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm transition-all"
+                class:bg-accent={contentType === 'story_chapter'}
+                class:text-earth-900={contentType === 'story_chapter'}
+                class:bg-earth-700={contentType !== 'story_chapter'}
+                class:text-earth-300={contentType !== 'story_chapter'}
+                class:hover:bg-earth-600={contentType !== 'story_chapter'}
+              >
+                <span>📖</span> Story
+              </button>
+            </div>
+          </div>
+
           <!-- Title -->
           <div class="mb-4">
-            <label for="title" class="text-sm text-earth-200 block mb-1.5">Title (optional)</label>
+            <label for="title" class="text-sm text-earth-200 block mb-1.5">
+              {contentType === 'article' ? 'Headline' : contentType === 'story_chapter' ? 'Chapter Title' : 'Title'} (optional)
+            </label>
             <input
               id="title"
               type="text"
               bind:value={title}
               class="input text-sm"
-              placeholder="Give your entry a title..."
+              placeholder={contentType === 'article' ? 'Enter headline...' : contentType === 'story_chapter' ? 'Chapter title...' : 'Give your entry a title...'}
             />
           </div>
 
@@ -353,7 +542,7 @@
           </div>
 
           <!-- Tags -->
-          <div>
+          <div class="mb-4">
             <label for="tags" class="text-sm text-earth-200 block mb-1.5">Tags (comma-separated)</label>
             <input
               id="tags"
@@ -364,38 +553,284 @@
             />
           </div>
 
-        {:else if activeTab === 'preview'}
-          <!-- Blog Preview -->
-          <div class="prose prose-invert max-w-none">
-            <div class="border border-earth-600/50 rounded-lg p-6 bg-earth-850">
-              {#if title}
-                <h1 class="text-2xl font-bold text-earth-50 mb-2">{title}</h1>
-              {/if}
-              <div class="flex items-center gap-3 text-sm text-earth-400 mb-4">
-                <span>By {$settings.natLangChain.authorName || 'Anonymous'}</span>
-                <span>•</span>
-                <span>{new Date(note.date).toLocaleDateString()}</span>
-                {#if monetization !== 'free'}
-                  <span>•</span>
-                  <span class="text-accent">{getMonetizationLabel(monetization)}</span>
-                {/if}
+          <!-- Story-specific metadata -->
+          {#if contentType === 'story_chapter'}
+            <div class="p-4 bg-earth-700/30 rounded-lg space-y-4">
+              <h4 class="text-sm font-medium text-earth-200 flex items-center gap-2">
+                <span>📖</span> Story Details
+              </h4>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="seriesTitle" class="text-xs text-earth-300 block mb-1">Series Title</label>
+                  <input
+                    id="seriesTitle"
+                    type="text"
+                    bind:value={seriesTitle}
+                    class="input text-sm"
+                    placeholder="My Story Series"
+                  />
+                </div>
+                <div>
+                  <label for="genre" class="text-xs text-earth-300 block mb-1">Genre</label>
+                  <select id="genre" bind:value={genre} class="input text-sm">
+                    {#each genres as g}
+                      <option value={g}>{g.charAt(0).toUpperCase() + g.slice(1).replace('-', ' ')}</option>
+                    {/each}
+                  </select>
+                </div>
               </div>
-              {#if $journalContext?.weather}
-                <div class="flex items-center gap-2 text-sm text-earth-500 mb-4 p-2 bg-earth-700/30 rounded">
-                  <span>🌤️</span>
-                  <span>{$journalContext.weather.conditionText}, {Math.round($journalContext.weather.tempCelsius)}°C</span>
-                  <span>•</span>
-                  <span>{$journalContext.dayOfWeek} {$journalContext.timeOfDay}</span>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label for="chapterNumber" class="text-xs text-earth-300 block mb-1">Chapter #</label>
+                  <input
+                    id="chapterNumber"
+                    type="number"
+                    bind:value={chapterNumber}
+                    min="1"
+                    class="input text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="totalChapters" class="text-xs text-earth-300 block mb-1">Total Chapters</label>
+                  <input
+                    id="totalChapters"
+                    type="number"
+                    bind:value={totalChapters}
+                    min="1"
+                    disabled={isOngoing}
+                    class="input text-sm"
+                    placeholder="?"
+                  />
+                </div>
+                <div class="flex items-end">
+                  <label class="flex items-center gap-2 cursor-pointer pb-2">
+                    <input type="checkbox" bind:checked={isOngoing} class="rounded border-earth-500" />
+                    <span class="text-xs text-earth-300">Ongoing</span>
+                  </label>
+                </div>
+              </div>
+              {#if chapterNumber === 1}
+                <div>
+                  <label for="synopsis" class="text-xs text-earth-300 block mb-1">Story Synopsis (for first chapter)</label>
+                  <textarea
+                    id="synopsis"
+                    bind:value={synopsis}
+                    class="input text-sm min-h-[60px] resize-y"
+                    placeholder="Brief story description for readers..."
+                  ></textarea>
                 </div>
               {/if}
-              <div class="text-earth-200 whitespace-pre-wrap leading-relaxed">
+            </div>
+          {/if}
+
+          <!-- Article-specific metadata -->
+          {#if contentType === 'article'}
+            <div class="p-4 bg-earth-700/30 rounded-lg space-y-4">
+              <h4 class="text-sm font-medium text-earth-200 flex items-center gap-2">
+                <span>📰</span> Article Details
+              </h4>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="articleCategory" class="text-xs text-earth-300 block mb-1">Category</label>
+                  <select id="articleCategory" bind:value={articleCategory} class="input text-sm">
+                    {#each articleCategories as cat}
+                      <option value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                    {/each}
+                  </select>
+                </div>
+                <div>
+                  <label for="subcategory" class="text-xs text-earth-300 block mb-1">Subcategory</label>
+                  <input
+                    id="subcategory"
+                    type="text"
+                    bind:value={subcategory}
+                    class="input text-sm"
+                    placeholder="e.g., Technology, Politics"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="byline" class="text-xs text-earth-300 block mb-1">Byline (additional info)</label>
+                  <input
+                    id="byline"
+                    type="text"
+                    bind:value={byline}
+                    class="input text-sm"
+                    placeholder="e.g., Senior Correspondent"
+                  />
+                </div>
+                <div>
+                  <label for="dateline" class="text-xs text-earth-300 block mb-1">Dateline (location)</label>
+                  <input
+                    id="dateline"
+                    type="text"
+                    bind:value={dateline}
+                    class="input text-sm"
+                    placeholder="e.g., New York"
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="sources" class="text-xs text-earth-300 block mb-1">Sources (comma-separated)</label>
+                <input
+                  id="sources"
+                  type="text"
+                  bind:value={sources}
+                  class="input text-sm"
+                  placeholder="e.g., Official statement, Interview with..."
+                />
+              </div>
+              <div class="flex gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" bind:checked={isBreaking} class="rounded border-earth-500" />
+                  <span class="text-xs text-earth-300">Breaking News</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" bind:checked={isOpinion} class="rounded border-earth-500" />
+                  <span class="text-xs text-earth-300">Opinion Piece</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" bind:checked={isAnalysis} class="rounded border-earth-500" />
+                  <span class="text-xs text-earth-300">Analysis</span>
+                </label>
+              </div>
+            </div>
+          {/if}
+
+        {:else if activeTab === 'preview'}
+          <!-- Content-Type Specific Previews -->
+          <div class="prose prose-invert max-w-none">
+            <div class="border border-earth-600/50 rounded-lg p-6 bg-earth-850">
+
+              <!-- Journal Preview -->
+              {#if contentType === 'journal'}
+                {#if title}
+                  <h1 class="text-2xl font-bold text-earth-50 mb-2">{title}</h1>
+                {/if}
+                <div class="flex items-center gap-3 text-sm text-earth-400 mb-4">
+                  <span>By {$settings.natLangChain.authorName || 'Anonymous'}</span>
+                  <span>•</span>
+                  <span>{new Date(note.date).toLocaleDateString()}</span>
+                  {#if monetization !== 'free'}
+                    <span>•</span>
+                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
+                  {/if}
+                </div>
+                {#if $journalContext?.weather}
+                  <div class="flex items-center gap-2 text-sm text-earth-500 mb-4 p-2 bg-earth-700/30 rounded">
+                    <span>🌤️</span>
+                    <span>{$journalContext.weather.conditionText}, {Math.round($journalContext.weather.tempCelsius)}°C</span>
+                    <span>•</span>
+                    <span>{$journalContext.dayOfWeek} {$journalContext.timeOfDay}</span>
+                  </div>
+                {/if}
+
+              <!-- Article Preview -->
+              {:else if contentType === 'article'}
+                {#if isBreaking}
+                  <div class="bg-red-900/50 text-red-200 text-xs font-bold px-2 py-1 rounded inline-block mb-2">
+                    BREAKING
+                  </div>
+                {/if}
+                <div class="text-xs text-earth-500 uppercase tracking-wide mb-1">
+                  {articleCategory}{subcategory ? ` / ${subcategory}` : ''}
+                  {#if isOpinion}
+                    <span class="text-accent ml-2">OPINION</span>
+                  {/if}
+                  {#if isAnalysis}
+                    <span class="text-blue-400 ml-2">ANALYSIS</span>
+                  {/if}
+                </div>
+                <h1 class="text-2xl font-bold text-earth-50 mb-2">{headline || title || 'Untitled Article'}</h1>
+                <div class="flex items-center gap-2 text-sm text-earth-400 mb-4">
+                  <span class="font-medium">{$settings.natLangChain.authorName || 'Anonymous'}</span>
+                  {#if byline}
+                    <span class="text-earth-500">| {byline}</span>
+                  {/if}
+                </div>
+                <div class="flex items-center gap-3 text-xs text-earth-500 mb-4">
+                  {#if dateline}
+                    <span class="font-medium">{dateline.toUpperCase()} —</span>
+                  {/if}
+                  <span>{new Date(note.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                  {#if monetization !== 'free'}
+                    <span>•</span>
+                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
+                  {/if}
+                </div>
+
+              <!-- Story Chapter Preview -->
+              {:else if contentType === 'story_chapter'}
+                <div class="text-center mb-4">
+                  <p class="text-xs text-earth-500 uppercase tracking-widest mb-1">{seriesTitle || 'Untitled Series'}</p>
+                  <span class="inline-block px-2 py-0.5 bg-earth-700 rounded text-xs text-earth-300">{genre}</span>
+                </div>
+                <h1 class="text-2xl font-bold text-earth-50 text-center mb-2">
+                  Chapter {chapterNumber}{title ? `: ${title}` : ''}
+                </h1>
+                <div class="flex items-center justify-center gap-3 text-sm text-earth-400 mb-4">
+                  <span>By {$settings.natLangChain.authorName || 'Anonymous'}</span>
+                  <span>•</span>
+                  <span>
+                    {#if isOngoing}
+                      Ongoing Series
+                    {:else if totalChapters}
+                      {chapterNumber} of {totalChapters}
+                    {:else}
+                      Chapter {chapterNumber}
+                    {/if}
+                  </span>
+                  {#if monetization !== 'free'}
+                    <span>•</span>
+                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
+                  {/if}
+                </div>
+                {#if chapterNumber === 1 && synopsis}
+                  <div class="bg-earth-700/30 p-3 rounded-lg mb-4 italic text-sm text-earth-300 border-l-2 border-accent">
+                    {synopsis}
+                  </div>
+                {/if}
+              {/if}
+
+              <!-- Content (shared) -->
+              <div class="text-earth-200 whitespace-pre-wrap leading-relaxed {contentType === 'story_chapter' ? 'text-justify first-letter:text-3xl first-letter:font-bold first-letter:mr-1' : ''}">
                 {editedContent || 'No content yet...'}
               </div>
+
+              <!-- Tags (shared) -->
               {#if tags}
                 <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-earth-600/50">
                   {#each tags.split(',').map(t => t.trim()).filter(Boolean) as tag}
                     <span class="px-2 py-0.5 bg-earth-700 rounded text-xs text-earth-300">#{tag}</span>
                   {/each}
+                </div>
+              {/if}
+
+              <!-- Article sources footer -->
+              {#if contentType === 'article' && sources}
+                <div class="mt-4 pt-4 border-t border-earth-600/50">
+                  <p class="text-xs text-earth-500 font-medium mb-1">Sources:</p>
+                  <ul class="text-xs text-earth-400 list-disc list-inside">
+                    {#each sources.split(',').map(s => s.trim()).filter(Boolean) as source}
+                      <li>{source}</li>
+                    {/each}
+                  </ul>
+                </div>
+              {/if}
+
+              <!-- Story chapter navigation hint -->
+              {#if contentType === 'story_chapter'}
+                <div class="mt-4 pt-4 border-t border-earth-600/50 text-center">
+                  <p class="text-xs text-earth-500 italic">
+                    {#if isOngoing}
+                      More chapters coming soon...
+                    {:else if totalChapters && chapterNumber < totalChapters}
+                      Next: Chapter {chapterNumber + 1}
+                    {:else}
+                      The End
+                    {/if}
+                  </p>
                 </div>
               {/if}
             </div>
