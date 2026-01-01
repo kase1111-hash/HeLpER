@@ -4,6 +4,7 @@ import type {
   DataSettings,
   NotificationSettings,
   QuickActionConfig,
+  WeatherSettings,
 } from './types';
 
 // Default settings
@@ -51,6 +52,14 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   dailyReminder: false,
   reminderTime: '20:00',
   sound: true,
+};
+
+export const DEFAULT_WEATHER_SETTINGS: WeatherSettings = {
+  enabled: true,
+  location: '',
+  autoDetectLocation: true,
+  temperatureUnit: 'celsius',
+  apiKey: '',
 };
 
 // Quick actions for AI

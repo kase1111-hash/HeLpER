@@ -10,6 +10,7 @@
     toggleSTT,
     stopSTT,
   } from '../lib/stores/stt';
+  import JournalContext from './JournalContext.svelte';
 
   let content = '';
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -64,6 +65,11 @@
 
 <div class="card flex-1 flex flex-col min-h-0">
   {#if $selectedNote}
+    <!-- Journal Context Panel -->
+    <div class="mb-3">
+      <JournalContext />
+    </div>
+
     <textarea
       bind:value={content}
       on:input={handleInput}

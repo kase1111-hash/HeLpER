@@ -2,6 +2,7 @@ mod commands;
 mod database;
 mod ollama;
 mod tray;
+mod weather;
 
 use tauri::Manager;
 
@@ -38,6 +39,9 @@ pub fn run() {
             commands::delete_note,
             commands::check_ollama_status,
             commands::send_chat_message,
+            commands::get_weather,
+            commands::detect_location,
+            commands::get_journal_context,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
