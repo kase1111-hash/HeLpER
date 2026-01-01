@@ -68,7 +68,7 @@
   let publishing = false;
   let aiEditing = false;
   let validation: NatLangChainValidation | null = null;
-  let activeTab: 'edit' | 'preview' | 'settings' = 'edit';
+  let activeTab: 'edit' | 'publish' = 'edit';
 
   const genres = [
     'fiction',
@@ -380,33 +380,23 @@
       <div class="flex border-b border-earth-600/50">
         <button
           on:click={() => (activeTab = 'edit')}
-          class="flex-1 px-4 py-2 text-sm font-medium transition-colors"
+          class="flex-1 px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
           class:text-accent={activeTab === 'edit'}
           class:border-b-2={activeTab === 'edit'}
           class:border-accent={activeTab === 'edit'}
           class:text-earth-400={activeTab !== 'edit'}
         >
-          Edit & AI Assist
+          <span>📝</span> Edit & Prepare
         </button>
         <button
-          on:click={() => (activeTab = 'preview')}
-          class="flex-1 px-4 py-2 text-sm font-medium transition-colors"
-          class:text-accent={activeTab === 'preview'}
-          class:border-b-2={activeTab === 'preview'}
-          class:border-accent={activeTab === 'preview'}
-          class:text-earth-400={activeTab !== 'preview'}
+          on:click={() => (activeTab = 'publish')}
+          class="flex-1 px-4 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          class:text-accent={activeTab === 'publish'}
+          class:border-b-2={activeTab === 'publish'}
+          class:border-accent={activeTab === 'publish'}
+          class:text-earth-400={activeTab !== 'publish'}
         >
-          Preview
-        </button>
-        <button
-          on:click={() => (activeTab = 'settings')}
-          class="flex-1 px-4 py-2 text-sm font-medium transition-colors"
-          class:text-accent={activeTab === 'settings'}
-          class:border-b-2={activeTab === 'settings'}
-          class:border-accent={activeTab === 'settings'}
-          class:text-earth-400={activeTab !== 'settings'}
-        >
-          Monetization
+          <span>⛓️</span> Publish on Chain
         </button>
       </div>
 
@@ -698,158 +688,98 @@
             </div>
           {/if}
 
-        {:else if activeTab === 'preview'}
-          <!-- Content-Type Specific Previews -->
-          <div class="prose prose-invert max-w-none">
-            <div class="border border-earth-600/50 rounded-lg p-6 bg-earth-850">
-
-              <!-- Journal Preview -->
-              {#if contentType === 'journal'}
-                {#if title}
-                  <h1 class="text-2xl font-bold text-earth-50 mb-2">{title}</h1>
-                {/if}
-                <div class="flex items-center gap-3 text-sm text-earth-400 mb-4">
-                  <span>By {$settings.natLangChain.authorName || 'Anonymous'}</span>
-                  <span>•</span>
-                  <span>{new Date(note.date).toLocaleDateString()}</span>
-                  {#if monetization !== 'free'}
-                    <span>•</span>
-                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
-                  {/if}
-                </div>
-                {#if $journalContext?.weather}
-                  <div class="flex items-center gap-2 text-sm text-earth-500 mb-4 p-2 bg-earth-700/30 rounded">
-                    <span>🌤️</span>
-                    <span>{$journalContext.weather.conditionText}, {Math.round($journalContext.weather.tempCelsius)}°C</span>
-                    <span>•</span>
-                    <span>{$journalContext.dayOfWeek} {$journalContext.timeOfDay}</span>
-                  </div>
-                {/if}
-
-              <!-- Article Preview -->
-              {:else if contentType === 'article'}
-                {#if isBreaking}
-                  <div class="bg-red-900/50 text-red-200 text-xs font-bold px-2 py-1 rounded inline-block mb-2">
-                    BREAKING
-                  </div>
-                {/if}
-                <div class="text-xs text-earth-500 uppercase tracking-wide mb-1">
-                  {articleCategory}{subcategory ? ` / ${subcategory}` : ''}
-                  {#if isOpinion}
-                    <span class="text-accent ml-2">OPINION</span>
-                  {/if}
-                  {#if isAnalysis}
-                    <span class="text-blue-400 ml-2">ANALYSIS</span>
-                  {/if}
-                </div>
-                <h1 class="text-2xl font-bold text-earth-50 mb-2">{headline || title || 'Untitled Article'}</h1>
-                <div class="flex items-center gap-2 text-sm text-earth-400 mb-4">
-                  <span class="font-medium">{$settings.natLangChain.authorName || 'Anonymous'}</span>
-                  {#if byline}
-                    <span class="text-earth-500">| {byline}</span>
-                  {/if}
-                </div>
-                <div class="flex items-center gap-3 text-xs text-earth-500 mb-4">
-                  {#if dateline}
-                    <span class="font-medium">{dateline.toUpperCase()} —</span>
-                  {/if}
-                  <span>{new Date(note.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                  {#if monetization !== 'free'}
-                    <span>•</span>
-                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
-                  {/if}
-                </div>
-
-              <!-- Story Chapter Preview -->
-              {:else if contentType === 'story_chapter'}
-                <div class="text-center mb-4">
-                  <p class="text-xs text-earth-500 uppercase tracking-widest mb-1">{seriesTitle || 'Untitled Series'}</p>
-                  <span class="inline-block px-2 py-0.5 bg-earth-700 rounded text-xs text-earth-300">{genre}</span>
-                </div>
-                <h1 class="text-2xl font-bold text-earth-50 text-center mb-2">
-                  Chapter {chapterNumber}{title ? `: ${title}` : ''}
-                </h1>
-                <div class="flex items-center justify-center gap-3 text-sm text-earth-400 mb-4">
-                  <span>By {$settings.natLangChain.authorName || 'Anonymous'}</span>
-                  <span>•</span>
-                  <span>
-                    {#if isOngoing}
-                      Ongoing Series
-                    {:else if totalChapters}
-                      {chapterNumber} of {totalChapters}
-                    {:else}
-                      Chapter {chapterNumber}
-                    {/if}
-                  </span>
-                  {#if monetization !== 'free'}
-                    <span>•</span>
-                    <span class="text-accent">{getMonetizationLabel(monetization)}</span>
-                  {/if}
-                </div>
-                {#if chapterNumber === 1 && synopsis}
-                  <div class="bg-earth-700/30 p-3 rounded-lg mb-4 italic text-sm text-earth-300 border-l-2 border-accent">
-                    {synopsis}
-                  </div>
-                {/if}
-              {/if}
-
-              <!-- Content (shared) -->
-              <div class="text-earth-200 whitespace-pre-wrap leading-relaxed {contentType === 'story_chapter' ? 'text-justify first-letter:text-3xl first-letter:font-bold first-letter:mr-1' : ''}">
-                {editedContent || 'No content yet...'}
+        {:else if activeTab === 'publish'}
+          <!-- Monetization Settings (compact) -->
+          <div class="grid grid-cols-2 gap-4 mb-4 p-4 bg-earth-700/30 rounded-lg">
+            <div>
+              <label for="monetization" class="text-xs text-earth-300 block mb-1">Monetization</label>
+              <select id="monetization" bind:value={monetization} class="input text-sm">
+                <option value="free">Free</option>
+                <option value="subscription">Subscribers Only</option>
+                <option value="per_entry">Pay Per Entry</option>
+                <option value="tip_jar">Tip Jar</option>
+              </select>
+            </div>
+            <div>
+              <label for="visibility" class="text-xs text-earth-300 block mb-1">Visibility</label>
+              <select id="visibility" bind:value={visibility} class="input text-sm">
+                <option value="public">Public</option>
+                <option value="subscribers_only">Subscribers Only</option>
+                <option value="private">Draft</option>
+              </select>
+            </div>
+            {#if monetization === 'per_entry'}
+              <div class="col-span-2">
+                <label for="price" class="text-xs text-earth-300 block mb-1">Price (USD)</label>
+                <input
+                  id="price"
+                  type="number"
+                  bind:value={price}
+                  min="0"
+                  step="0.01"
+                  class="input text-sm w-32"
+                  placeholder="0.00"
+                />
               </div>
+            {/if}
+          </div>
 
-              <!-- Tags (shared) -->
-              {#if tags}
-                <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-earth-600/50">
-                  {#each tags.split(',').map(t => t.trim()).filter(Boolean) as tag}
-                    <span class="px-2 py-0.5 bg-earth-700 rounded text-xs text-earth-300">#{tag}</span>
-                  {/each}
-                </div>
-              {/if}
-
-              <!-- Article sources footer -->
-              {#if contentType === 'article' && sources}
-                <div class="mt-4 pt-4 border-t border-earth-600/50">
-                  <p class="text-xs text-earth-500 font-medium mb-1">Sources:</p>
-                  <ul class="text-xs text-earth-400 list-disc list-inside">
-                    {#each sources.split(',').map(s => s.trim()).filter(Boolean) as source}
-                      <li>{source}</li>
-                    {/each}
-                  </ul>
-                </div>
-              {/if}
-
-              <!-- Story chapter navigation hint -->
-              {#if contentType === 'story_chapter'}
-                <div class="mt-4 pt-4 border-t border-earth-600/50 text-center">
-                  <p class="text-xs text-earth-500 italic">
-                    {#if isOngoing}
-                      More chapters coming soon...
-                    {:else if totalChapters && chapterNumber < totalChapters}
-                      Next: Chapter {chapterNumber + 1}
-                    {:else}
-                      The End
-                    {/if}
-                  </p>
-                </div>
+          <!-- Preview -->
+          <div class="border border-earth-600/50 rounded-lg p-5 bg-earth-850 mb-4">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-lg">{getContentTypeIcon(contentType)}</span>
+              <span class="text-xs text-earth-500 uppercase tracking-wide">{getContentTypeLabel(contentType)}</span>
+              {#if monetization !== 'free'}
+                <span class="text-xs text-accent ml-auto">{getMonetizationLabel(monetization)}</span>
               {/if}
             </div>
+
+            {#if title}
+              <h2 class="text-xl font-bold text-earth-50 mb-2">{title}</h2>
+            {/if}
+
+            <div class="flex items-center gap-2 text-xs text-earth-400 mb-3">
+              <span>{$settings.natLangChain.authorName || 'Anonymous'}</span>
+              <span>•</span>
+              <span>{new Date(note.date).toLocaleDateString()}</span>
+              {#if contentType === 'story_chapter' && seriesTitle}
+                <span>•</span>
+                <span>{seriesTitle} Ch.{chapterNumber}</span>
+              {/if}
+            </div>
+
+            {#if $journalContext?.weather}
+              <div class="text-xs text-earth-500 mb-3">
+                🌤️ {$journalContext.weather.conditionText}, {Math.round($journalContext.weather.tempCelsius)}°C
+              </div>
+            {/if}
+
+            <div class="text-earth-200 text-sm whitespace-pre-wrap leading-relaxed line-clamp-6">
+              {editedContent || 'No content...'}
+            </div>
+
+            {#if tags}
+              <div class="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-earth-600/30">
+                {#each tags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5) as tag}
+                  <span class="px-1.5 py-0.5 bg-earth-700 rounded text-xs text-earth-400">#{tag}</span>
+                {/each}
+              </div>
+            {/if}
           </div>
 
           <!-- Validation Results -->
           {#if validation}
-            <div class="mt-4 p-4 rounded-lg {validation.valid ? 'bg-green-900/20' : 'bg-yellow-900/20'}">
+            <div class="p-4 rounded-lg mb-4 {validation.valid ? 'bg-green-900/20' : 'bg-yellow-900/20'}">
               <div class="flex items-center gap-2 mb-2">
                 <span>{validation.valid ? '✅' : '⚠️'}</span>
-                <span class="font-medium" class:text-green-400={validation.valid} class:text-yellow-400={!validation.valid}>
+                <span class="text-sm font-medium" class:text-green-400={validation.valid} class:text-yellow-400={!validation.valid}>
                   {validation.valid ? 'Ready to Publish' : 'Needs Attention'}
                 </span>
+                <span class="text-xs text-earth-500 ml-auto">Clarity: {Math.round(validation.clarity_score * 100)}%</span>
               </div>
-              <p class="text-sm text-earth-300">Clarity Score: {Math.round(validation.clarity_score * 100)}%</p>
-              <p class="text-sm text-earth-400">Detected Intent: {validation.intent_detected}</p>
               {#if validation.suggestions?.length}
-                <ul class="mt-2 text-sm text-earth-400 list-disc list-inside">
-                  {#each validation.suggestions as suggestion}
+                <ul class="text-xs text-earth-400 list-disc list-inside">
+                  {#each validation.suggestions.slice(0, 3) as suggestion}
                     <li>{suggestion}</li>
                   {/each}
                 </ul>
@@ -857,73 +787,9 @@
             </div>
           {/if}
 
-        {:else if activeTab === 'settings'}
-          <!-- Monetization Settings -->
-          <div class="space-y-4">
-            <div>
-              <label for="monetization" class="text-sm text-earth-200 block mb-1.5">Monetization Model</label>
-              <select
-                id="monetization"
-                bind:value={monetization}
-                class="input text-sm"
-              >
-                <option value="free">Free - Anyone can read</option>
-                <option value="subscription">Subscription - For your subscribers</option>
-                <option value="per_entry">Pay Per Entry - One-time purchase</option>
-                <option value="tip_jar">Tip Jar - Free with optional tips</option>
-              </select>
-            </div>
-
-            {#if monetization === 'per_entry'}
-              <div>
-                <label for="price" class="text-sm text-earth-200 block mb-1.5">Price (USD)</label>
-                <input
-                  id="price"
-                  type="number"
-                  bind:value={price}
-                  min="0"
-                  step="0.01"
-                  class="input text-sm"
-                  placeholder="0.00"
-                />
-                <p class="text-xs text-earth-500 mt-1">Readers pay {formatPrice(price)} to access this entry</p>
-              </div>
-            {/if}
-
-            <div>
-              <label for="visibility" class="text-sm text-earth-200 block mb-1.5">Visibility</label>
-              <select
-                id="visibility"
-                bind:value={visibility}
-                class="input text-sm"
-              >
-                <option value="public">Public - Visible to everyone</option>
-                <option value="subscribers_only">Subscribers Only</option>
-                <option value="private">Private - Save as draft</option>
-              </select>
-            </div>
-
-            <div class="pt-4 border-t border-earth-600/50">
-              <h4 class="text-sm font-medium text-earth-200 mb-2">Context to Include</h4>
-              <label class="flex items-center gap-2 cursor-pointer mb-2">
-                <input
-                  type="checkbox"
-                  checked={$settings.natLangChain.includeWeatherContext}
-                  on:change={() => {}}
-                  class="rounded border-earth-500"
-                />
-                <span class="text-sm text-earth-300">Include weather context</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={$settings.natLangChain.includeLocationContext}
-                  on:change={() => {}}
-                  class="rounded border-earth-500"
-                />
-                <span class="text-sm text-earth-300">Include location</span>
-              </label>
-            </div>
+          <!-- Intent display -->
+          <div class="text-xs text-earth-500 italic">
+            Intent: {intent}
           </div>
         {/if}
       </div>
@@ -958,5 +824,11 @@
   }
   .bg-earth-850 {
     background-color: rgb(35 30 25);
+  }
+  .line-clamp-6 {
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>
