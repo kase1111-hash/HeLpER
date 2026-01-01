@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tauri::State;
 use crate::database::DbPool;
+use crate::natlangchain;
 use crate::ollama;
 use crate::weather;
 
@@ -189,4 +190,39 @@ pub async fn get_journal_context(
     location: String,
 ) -> Result<weather::JournalContext, String> {
     weather::get_journal_context(&api_key, &location).await
+}
+
+// ========== NatLangChain Commands ==========
+
+/// Validate an entry before publishing to NatLangChain
+#[tauri::command]
+pub async fn nlc_validate_entry(
+    api_url: String,
+    entry: natlangchain::NatLangChainEntry,
+) -> Result<natlangchain::ValidationResult, String> {
+    natlangchain::validate_entry(&api_url, &entry).await
+}
+
+/// Publish an entry to NatLangChain
+#[tauri::command]
+pub async fn nlc_publish_entry(
+    api_url: String,
+    entry: natlangchain::NatLangChainEntry,
+) -> Result<natlangchain::PublishResult, String> {
+    natlangchain::publish_entry(&api_url, &entry).await
+}
+
+/// Get author stats from NatLangChain
+#[tauri::command]
+pub async fn nlc_get_stats(
+    api_url: String,
+    author_id: String,
+) -> Result<natlangchain::ChainStats, String> {
+    natlangchain::get_author_stats(&api_url, &author_id).await
+}
+
+/// Check NatLangChain API connection
+#[tauri::command]
+pub async fn nlc_check_connection(api_url: String) -> Result<bool, String> {
+    natlangchain::check_connection(&api_url).await
 }

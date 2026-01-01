@@ -7,6 +7,7 @@ import {
   DEFAULT_DATA_SETTINGS,
   DEFAULT_NOTIFICATION_SETTINGS,
   DEFAULT_WEATHER_SETTINGS,
+  DEFAULT_NATLANGCHAIN_SETTINGS,
 } from '../constants';
 
 const SETTINGS_STORE_PATH = 'settings.json';
@@ -25,6 +26,7 @@ export const settings = writable<Settings>({
   data: { ...DEFAULT_DATA_SETTINGS },
   notifications: { ...DEFAULT_NOTIFICATION_SETTINGS },
   weather: { ...DEFAULT_WEATHER_SETTINGS },
+  natLangChain: { ...DEFAULT_NATLANGCHAIN_SETTINGS },
 });
 
 // Initialize persistent store and load settings
@@ -41,6 +43,7 @@ export async function initializeSettings(): Promise<void> {
         data: { ...DEFAULT_DATA_SETTINGS, ...savedSettings.data },
         notifications: { ...DEFAULT_NOTIFICATION_SETTINGS, ...savedSettings.notifications },
         weather: { ...DEFAULT_WEATHER_SETTINGS, ...savedSettings.weather },
+        natLangChain: { ...DEFAULT_NATLANGCHAIN_SETTINGS, ...savedSettings.natLangChain },
       });
     }
 
@@ -108,6 +111,7 @@ export function updateSettings(partial: Partial<Settings>): void {
     data: { ...s.data, ...partial.data },
     notifications: { ...s.notifications, ...partial.notifications },
     weather: { ...s.weather, ...partial.weather },
+    natLangChain: { ...s.natLangChain, ...partial.natLangChain },
   }));
   // Persist to disk
   saveSettings();
@@ -121,6 +125,7 @@ export function resetSettings(): void {
     data: { ...DEFAULT_DATA_SETTINGS },
     notifications: { ...DEFAULT_NOTIFICATION_SETTINGS },
     weather: { ...DEFAULT_WEATHER_SETTINGS },
+    natLangChain: { ...DEFAULT_NATLANGCHAIN_SETTINGS },
   });
   // Persist to disk
   saveSettings();

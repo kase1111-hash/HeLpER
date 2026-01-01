@@ -10,10 +10,13 @@
     toggleSTT,
     stopSTT,
   } from '../lib/stores/stt';
+  import { settings } from '../lib/stores/settings';
   import JournalContext from './JournalContext.svelte';
+  import PublishPanel from './PublishPanel.svelte';
 
   let content = '';
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+  let publishPanelOpen = false;
 
   // Sync content when selected note changes
   $: if ($selectedNote) {
@@ -78,32 +81,53 @@
       maxlength={NOTE_MAX_LENGTH}
     ></textarea>
 
-    <!-- Footer with STT and Character Count -->
+    <!-- Footer with STT, Publish, and Character Count -->
     <div class="flex items-center justify-between pt-3 border-t border-earth-600/50 mt-3 gap-3">
-      <!-- Voice Input Button -->
-      {#if $sttAvailable}
-        <button
-          on:click={handleVoiceInput}
-          class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150"
-          class:bg-accent={$isNoteSTTActive}
-          class:text-earth-900={$isNoteSTTActive}
-          class:animate-pulse-subtle={$isNoteSTTActive}
-          class:bg-earth-600={!$isNoteSTTActive}
-          class:text-earth-200={!$isNoteSTTActive}
-          class:hover:bg-earth-500={!$isNoteSTTActive}
-          title={$isNoteSTTActive ? 'Stop dictation' : 'Start dictation'}
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-            />
-          </svg>
-          <span>{$isNoteSTTActive ? 'Listening...' : 'Dictate'}</span>
-        </button>
-      {/if}
+      <div class="flex items-center gap-2">
+        <!-- Voice Input Button -->
+        {#if $sttAvailable}
+          <button
+            on:click={handleVoiceInput}
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150"
+            class:bg-accent={$isNoteSTTActive}
+            class:text-earth-900={$isNoteSTTActive}
+            class:animate-pulse-subtle={$isNoteSTTActive}
+            class:bg-earth-600={!$isNoteSTTActive}
+            class:text-earth-200={!$isNoteSTTActive}
+            class:hover:bg-earth-500={!$isNoteSTTActive}
+            title={$isNoteSTTActive ? 'Stop dictation' : 'Start dictation'}
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+              />
+            </svg>
+            <span>{$isNoteSTTActive ? 'Listening...' : 'Dictate'}</span>
+          </button>
+        {/if}
+
+        <!-- Publish Button -->
+        {#if $settings.natLangChain.enabled && content.trim()}
+          <button
+            on:click={() => (publishPanelOpen = true)}
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-earth-600 text-earth-200 hover:bg-accent hover:text-earth-900 transition-all duration-150"
+            title="Publish to NatLangChain"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+            <span>Publish</span>
+          </button>
+        {/if}
+      </div>
 
       <!-- Progress bar -->
       <div class="flex-1 h-1 bg-earth-600 rounded-full overflow-hidden">
@@ -141,3 +165,12 @@
     </div>
   {/if}
 </div>
+
+<!-- Publish Panel -->
+{#if $selectedNote}
+  <PublishPanel
+    note={$selectedNote}
+    bind:open={publishPanelOpen}
+    on:close={() => (publishPanelOpen = false)}
+  />
+{/if}

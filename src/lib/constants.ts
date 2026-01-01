@@ -5,6 +5,7 @@ import type {
   NotificationSettings,
   QuickActionConfig,
   WeatherSettings,
+  NatLangChainSettings,
 } from './types';
 
 // Default settings
@@ -60,6 +61,19 @@ export const DEFAULT_WEATHER_SETTINGS: WeatherSettings = {
   autoDetectLocation: true,
   temperatureUnit: 'celsius',
   apiKey: '',
+};
+
+export const DEFAULT_NATLANGCHAIN_SETTINGS: NatLangChainSettings = {
+  enabled: false,
+  apiUrl: 'http://localhost:5000',
+  authorId: '',
+  authorName: '',
+  defaultMonetization: 'free',
+  defaultVisibility: 'public',
+  defaultPrice: 0,
+  includeWeatherContext: true,
+  includeLocationContext: false,
+  autoAuditBeforePublish: true,
 };
 
 // Quick actions for AI
