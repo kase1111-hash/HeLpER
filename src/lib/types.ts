@@ -97,6 +97,7 @@ export interface Settings {
   data: DataSettings;
   notifications: NotificationSettings;
   weather: WeatherSettings;
+  natLangChain: NatLangChainSettings;
 }
 
 // Quick action types
@@ -165,4 +166,65 @@ export interface WeatherSettings {
   autoDetectLocation: boolean;
   temperatureUnit: TemperatureUnit;
   apiKey: string;
+}
+
+// NatLangChain types
+export type MonetizationModel = 'free' | 'subscription' | 'per_entry' | 'tip_jar';
+export type EntryVisibility = 'public' | 'subscribers_only' | 'private';
+
+export interface NatLangChainEntry {
+  id?: string;
+  author: string;
+  content: string;
+  intent: string;
+  title?: string;
+  tags?: string[];
+  monetization: MonetizationModel;
+  price?: number;
+  visibility: EntryVisibility;
+  context?: {
+    weather?: string;
+    location?: string;
+    mood?: string;
+    date: string;
+    timeOfDay: string;
+  };
+  createdAt: string;
+  hash?: string;
+}
+
+export interface NatLangChainValidation {
+  valid: boolean;
+  clarity_score: number;
+  intent_detected: string;
+  suggestions?: string[];
+  warnings?: string[];
+}
+
+export interface NatLangChainPublishResult {
+  success: boolean;
+  entryId?: string;
+  blockHash?: string;
+  error?: string;
+  transactionUrl?: string;
+}
+
+export interface NatLangChainStats {
+  totalEntries: number;
+  totalEarnings: number;
+  subscribers: number;
+  views: number;
+}
+
+export interface NatLangChainSettings {
+  enabled: boolean;
+  apiUrl: string;
+  authorId: string;
+  authorName: string;
+  defaultMonetization: MonetizationModel;
+  defaultVisibility: EntryVisibility;
+  defaultPrice: number;
+  includeWeatherContext: boolean;
+  includeLocationContext: boolean;
+  autoAuditBeforePublish: boolean;
 }

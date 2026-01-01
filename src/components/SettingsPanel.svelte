@@ -5,10 +5,40 @@
   import { exportNotes, backupAllData } from '../lib/services/export';
   import { detectLocation } from '../lib/services/weather';
   import { forceRefreshWeather, detectedLocation } from '../lib/stores/weather';
-  import type { Theme, TemperatureUnit } from '../lib/types';
+  import type { Theme, TemperatureUnit, MonetizationModel } from '../lib/types';
+  import { checkConnection } from '../lib/services/natlangchain';
 
   let exporting = false;
   let detectingLocation = false;
+  let checkingNlc = false;
+  let nlcConnected = false;
+
+  function handleNlcMonetizationChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    updateSettings({
+      natLangChain: { ...$settings.natLangChain, defaultMonetization: target.value as MonetizationModel },
+    });
+  }
+
+  async function handleCheckNlcConnection() {
+    if (!$settings.natLangChain.apiUrl) {
+      showToast({ type: 'error', message: 'Please enter a NatLangChain API URL' });
+      return;
+    }
+    checkingNlc = true;
+    try {
+      nlcConnected = await checkConnection($settings.natLangChain.apiUrl);
+      if (nlcConnected) {
+        showToast({ type: 'success', message: 'Connected to NatLangChain' });
+      } else {
+        showToast({ type: 'warning', message: 'Could not connect to NatLangChain' });
+      }
+    } catch (error) {
+      showToast({ type: 'error', message: 'Connection check failed' });
+    } finally {
+      checkingNlc = false;
+    }
+  }
 
   async function handleDetectLocation() {
     detectingLocation = true;
@@ -388,6 +418,149 @@
               >Always on top</span
             >
           </label>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
+      <!-- NatLangChain Section -->
+      <section>
+        <h3 class="text-xs font-semibold text-accent uppercase tracking-wider mb-3">
+          NatLangChain Publishing
+        </h3>
+        <div class="space-y-4">
+          <label class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative">
+              <input
+                type="checkbox"
+                checked={$settings.natLangChain.enabled}
+                on:change={(e) =>
+                  updateSettings({
+                    natLangChain: { ...$settings.natLangChain, enabled: e.currentTarget.checked },
+                  })}
+                class="sr-only peer"
+              />
+              <div
+                class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+              ></div>
+              <div
+                class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+              ></div>
+            </div>
+            <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+              >Enable blockchain publishing</span
+            >
+          </label>
+
+          {#if $settings.natLangChain.enabled}
+            <div>
+              <label for="nlc-api-url" class="text-sm text-earth-200 block mb-1.5">
+                API URL
+                <a
+                  href="https://github.com/kase1111-hash/NatLangChain"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs text-accent hover:underline ml-1"
+                >(Learn more)</a>
+              </label>
+              <div class="flex gap-2">
+                <input
+                  id="nlc-api-url"
+                  type="text"
+                  value={$settings.natLangChain.apiUrl}
+                  on:change={(e) =>
+                    updateSettings({
+                      natLangChain: { ...$settings.natLangChain, apiUrl: e.currentTarget.value },
+                    })}
+                  class="input text-sm flex-1"
+                  placeholder="http://localhost:5000"
+                />
+                <button
+                  on:click={handleCheckNlcConnection}
+                  disabled={checkingNlc}
+                  class="btn btn-secondary text-sm px-3"
+                  title="Test connection"
+                >
+                  {#if checkingNlc}
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                  {:else}
+                    Test
+                  {/if}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="nlc-author-name" class="text-sm text-earth-200 block mb-1.5">Author Name</label>
+              <input
+                id="nlc-author-name"
+                type="text"
+                value={$settings.natLangChain.authorName}
+                on:change={(e) =>
+                  updateSettings({
+                    natLangChain: { ...$settings.natLangChain, authorName: e.currentTarget.value },
+                  })}
+                class="input text-sm"
+                placeholder="Your display name"
+              />
+            </div>
+
+            <div>
+              <label for="nlc-author-id" class="text-sm text-earth-200 block mb-1.5">Author ID (optional)</label>
+              <input
+                id="nlc-author-id"
+                type="text"
+                value={$settings.natLangChain.authorId}
+                on:change={(e) =>
+                  updateSettings({
+                    natLangChain: { ...$settings.natLangChain, authorId: e.currentTarget.value },
+                  })}
+                class="input text-sm"
+                placeholder="Unique identifier for earnings"
+              />
+            </div>
+
+            <div class="flex items-center justify-between">
+              <label for="nlc-monetization" class="text-sm text-earth-200">Default Monetization</label>
+              <select
+                id="nlc-monetization"
+                value={$settings.natLangChain.defaultMonetization}
+                on:change={handleNlcMonetizationChange}
+                class="input w-40 text-sm py-1.5"
+              >
+                <option value="free">Free</option>
+                <option value="subscription">Subscription</option>
+                <option value="per_entry">Pay Per Entry</option>
+                <option value="tip_jar">Tip Jar</option>
+              </select>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+              <div class="relative">
+                <input
+                  type="checkbox"
+                  checked={$settings.natLangChain.autoAuditBeforePublish}
+                  on:change={(e) =>
+                    updateSettings({
+                      natLangChain: { ...$settings.natLangChain, autoAuditBeforePublish: e.currentTarget.checked },
+                    })}
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-9 h-5 bg-earth-600 rounded-full peer-checked:bg-accent transition-colors duration-200"
+                ></div>
+                <div
+                  class="absolute left-0.5 top-0.5 w-4 h-4 bg-earth-300 rounded-full peer-checked:translate-x-4 peer-checked:bg-earth-900 transition-all duration-200"
+                ></div>
+              </div>
+              <span class="text-sm text-earth-200 group-hover:text-earth-100 transition-colors"
+                >Validate before publishing</span
+              >
+            </label>
+          {/if}
         </div>
       </section>
 

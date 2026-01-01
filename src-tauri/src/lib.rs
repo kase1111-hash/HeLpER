@@ -1,5 +1,6 @@
 mod commands;
 mod database;
+mod natlangchain;
 mod ollama;
 mod tray;
 mod weather;
@@ -42,6 +43,10 @@ pub fn run() {
             commands::get_weather,
             commands::detect_location,
             commands::get_journal_context,
+            commands::nlc_validate_entry,
+            commands::nlc_publish_entry,
+            commands::nlc_get_stats,
+            commands::nlc_check_connection,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
