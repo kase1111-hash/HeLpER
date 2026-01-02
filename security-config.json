@@ -1,0 +1,43 @@
+{
+  "SiemEndpoint": "http://localhost:8080/api/v1/events",
+  "SiemApiKey": "",
+  "DaemonSocket": "/var/run/boundary-daemon.sock",
+  "DaemonHttpEndpoint": "http://localhost:9090/api/v1",
+  "EnableSiem": true,
+  "EnableDaemon": true,
+  "LogPath": "./logs",
+  "ProductName": "HeLpER",
+  "ProductVersion": "0.1.0",
+  "Severity": {
+    "Info": 1,
+    "Low": 3,
+    "Medium": 5,
+    "High": 7,
+    "Critical": 10
+  },
+  "ConnectionProtection": {
+    "NpmRegistry": {
+      "destination": "registry.npmjs.org",
+      "port": 443,
+      "protocol": "tcp",
+      "purpose": "package-management"
+    },
+    "CratesIo": {
+      "destination": "crates.io",
+      "port": 443,
+      "protocol": "tcp",
+      "purpose": "package-management"
+    },
+    "GitHub": {
+      "destination": "github.com",
+      "port": 443,
+      "protocol": "tcp",
+      "purpose": "source-control"
+    }
+  },
+  "TripwireRules": {
+    "MaxFailedOperations": 5,
+    "LockdownOnCriticalError": true,
+    "NotifyOnHighSeverity": true
+  }
+}
