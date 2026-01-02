@@ -7,7 +7,7 @@
   "EnableDaemon": true,
   "LogPath": "./logs",
   "ProductName": "HeLpER",
-  "ProductVersion": "0.1.0",
+  "ProductVersion": "0.1.0-alpha",
   "Severity": {
     "Info": 1,
     "Low": 3,
