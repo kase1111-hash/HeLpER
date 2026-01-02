@@ -4,7 +4,7 @@
 
 A minimalist daily notes app with an integrated AI assistant, weather-aware journal context, and blockchain publishing capabilities.
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -80,6 +80,27 @@ npm run tauri dev
 npm run tauri build
 ```
 
+### Windows Quick Start
+
+Windows users can use the provided batch scripts:
+
+```batch
+:: First-time setup - installs all dependencies
+assemble-windows.bat
+
+:: Start the development server
+startup-windows.bat
+
+:: Build for production
+build-windows.bat
+```
+
+These scripts include:
+- Prerequisite checks (Node.js, Rust, PowerShell)
+- Automatic retry logic for network operations
+- Detailed logging to `logs/` directory
+- Security integration with Boundary-SIEM and boundary-daemon
+
 ## Keyboard Shortcuts
 
 | Action | Windows/Linux | macOS |
@@ -147,7 +168,13 @@ HeLpER/
 │       └── weather.rs      # Weather API client
 ├── tests/                  # Unit tests
 ├── e2e/                    # End-to-end tests
-└── docs/                   # Documentation
+├── scripts/                # Build and utility scripts
+│   └── security-integration.ps1  # Security module
+├── docs/                   # Documentation
+├── assemble-windows.bat    # Windows setup script
+├── startup-windows.bat     # Windows dev server script
+├── build-windows.bat       # Windows build script
+└── security-config.json    # Security configuration
 ```
 
 ## Documentation
@@ -210,6 +237,43 @@ npm run tauri dev
 | **NatLangChain** | Publishing settings, author info, monetization defaults |
 | **Data** | Export and backup options |
 
+## Security Integration
+
+HeLpER includes optional integration with security monitoring systems:
+
+### Boundary-SIEM
+
+Reports events to [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) for centralized security monitoring:
+
+- Application startup/shutdown events
+- Operation success/failure logging
+- Error reporting with severity levels
+- CEF-format local logging for ingestion
+
+### boundary-daemon
+
+Integrates with [boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-) for policy enforcement:
+
+- Policy checks before sensitive operations
+- Connection protection for network requests
+- Tripwire detection and lockdown mode handling
+- Boundary mode awareness (OPEN, RESTRICTED, TRUSTED, AIRGAP, COLDROOM, LOCKDOWN)
+
+### Configuration
+
+Edit `security-config.json` to configure security integration:
+
+```json
+{
+  "SiemEndpoint": "http://localhost:8080/api/v1/events",
+  "DaemonHttpEndpoint": "http://localhost:9090/api/v1",
+  "EnableSiem": true,
+  "EnableDaemon": true
+}
+```
+
+Security integration is optional and gracefully degrades when services are unavailable.
+
 ## Contributing
 
 Contributions are welcome! Please open an issue first to discuss changes.
@@ -220,4 +284,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-*Built with Tauri, Svelte, and Ollama*
+*HeLpER v0.1.0-alpha - Built with Tauri, Svelte, and Ollama*
