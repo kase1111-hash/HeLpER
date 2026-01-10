@@ -2,7 +2,9 @@
 
 **Helpful Lightweight Personal Everyday Recorder**
 
-A minimalist daily notes app with an integrated AI assistant, weather-aware journal context, and blockchain publishing capabilities.
+A privacy-first personal journal application with local AI integration for the authenticity economy. HeLpER combines prose-first note-taking with intent preservation, weather-aware journal context, and natural language blockchain publishing via NatLangChain.
+
+Built for digital sovereignty and human-AI collaboration, HeLpER keeps all your cognitive work on your device while offering optional self-hosted AI assistance through Ollama. Perfect as a family journal app, personal knowledge base, or daily decision documentation tool.
 
 ![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
@@ -14,13 +16,13 @@ A minimalist daily notes app with an integrated AI assistant, weather-aware jour
 
 ### Core Features
 
-- **Daily Notes** - Organize notes by date with easy calendar navigation
-- **AI Assistant** - Local LLM integration via Ollama for note formatting, expansion, and chat
-- **Auto-Save** - Notes save automatically as you type
+- **Daily Notes** - Organize notes by date with easy calendar navigation for personal reasoning audit trails
+- **AI Assistant** - Local LLM integration via Ollama for note formatting, expansion, and human-AI collaboration in writing
+- **Auto-Save** - Notes save automatically as you type, preserving your cognitive work
 - **System Tray** - Minimize to tray for quick access
-- **Search** - Find notes instantly with full-text search
-- **Export** - Save notes as Markdown or JSON
-- **Privacy First** - All data stays on your device
+- **Search** - Find notes instantly with full-text search across your private knowledge base
+- **Export** - Save notes as Markdown or JSON for data ownership and portability
+- **Privacy First** - All data stays on your device with owned AI infrastructure
 
 ### Journal Context
 
@@ -31,12 +33,13 @@ A minimalist daily notes app with an integrated AI assistant, weather-aware jour
 
 ### NatLangChain Publishing
 
-- **Blockchain Publishing** - Publish your writing to NatLangChain
-- **Multiple Content Types** - Support for journal entries, news articles, and serialized fiction
-- **Monetization Options** - Free, subscription, pay-per-entry, or tip jar models
-- **AI Editing** - Polish, clarify, expand, or summarize content before publishing
-- **Intent Detection** - AI-assisted intent suggestions for your entries
-- **Validation** - Pre-publish validation with clarity scoring
+- **Natural Language Blockchain** - Publish your writing to NatLangChain's prose-first ledger
+- **Intent-Native Protocol** - Human-readable smart contracts preserve your authorial intent
+- **Multiple Content Types** - Support for journal entries, news articles, and serialized fiction with semantic blockchain storage
+- **Monetization Options** - Free, subscription, pay-per-entry, or tip jar models for cognitive work valuation
+- **AI Editing** - Polish, clarify, expand, or summarize content before publishing to the intent preservation blockchain
+- **Intent Detection** - AI-assisted intent suggestions for your entries using linguistic consensus
+- **Validation** - Pre-publish validation with clarity scoring for auditable prose transactions
 
 ### First Run Experience
 
@@ -239,25 +242,25 @@ npm run tauri dev
 
 ## Security Integration
 
-HeLpER includes optional integration with security monitoring systems:
+HeLpER includes optional integration with AI security monitoring systems for comprehensive trust enforcement:
 
 ### Boundary-SIEM
 
-Reports events to [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) for centralized security monitoring:
+Reports events to [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) for centralized AI security monitoring and security event management:
 
-- Application startup/shutdown events
-- Operation success/failure logging
-- Error reporting with severity levels
-- CEF-format local logging for ingestion
+- Application startup/shutdown events with agent security logs
+- Operation success/failure logging for security audit trails
+- Error reporting with severity levels and AI threat detection
+- CEF-format local logging for SIEM ingestion
 
 ### boundary-daemon
 
-Integrates with [boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-) for policy enforcement:
+Integrates with [boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-) for AI trust enforcement and cognition boundary control:
 
-- Policy checks before sensitive operations
-- Connection protection for network requests
+- Policy checks before sensitive operations via the trust layer for AI
+- Connection protection for network requests with cognitive firewall
 - Tripwire detection and lockdown mode handling
-- Boundary mode awareness (OPEN, RESTRICTED, TRUSTED, AIRGAP, COLDROOM, LOCKDOWN)
+- Boundary mode awareness (OPEN, RESTRICTED, TRUSTED, AIRGAP, COLDROOM, LOCKDOWN) for agent security policy
 
 ### Configuration
 
@@ -284,4 +287,38 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-*HeLpER v0.1.0-alpha - Built with Tauri, Svelte, and Ollama*
+## Connected Repositories
+
+HeLpER is part of a larger ecosystem of tools for digital sovereignty, human-AI collaboration, and the authenticity economy.
+
+### NatLangChain Ecosystem
+
+- **[NatLangChain](https://github.com/kase1111-hash/NatLangChain)** - Prose-first, intent-native blockchain protocol for recording human intent in natural language
+- **[IntentLog](https://github.com/kase1111-hash/IntentLog)** - Git for human reasoning; tracks "why" changes happen via prose commits
+- **[RRA-Module](https://github.com/kase1111-hash/RRA-Module)** - Revenant Repo Agent for abandoned repository monetization
+- **[mediator-node](https://github.com/kase1111-hash/mediator-node)** - LLM mediation layer for matching, negotiation, and closure proposals
+- **[ILR-module](https://github.com/kase1111-hash/ILR-module)** - IP & Licensing Reconciliation for dispute resolution
+- **[Finite-Intent-Executor](https://github.com/kase1111-hash/Finite-Intent-Executor)** - Posthumous execution of predefined intent via smart contracts
+
+### Agent-OS Ecosystem
+
+- **[Agent-OS](https://github.com/kase1111-hash/Agent-OS)** - Natural-language native operating system for AI agents
+- **[synth-mind](https://github.com/kase1111-hash/synth-mind)** - NLOS-based agent with psychological modules for emergent continuity and empathy
+- **[boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-)** - Mandatory trust enforcement layer defining cognition boundaries
+- **[memory-vault](https://github.com/kase1111-hash/memory-vault)** - Secure, offline-capable, owner-sovereign storage for cognitive artifacts
+- **[value-ledger](https://github.com/kase1111-hash/value-ledger)** - Economic accounting layer for cognitive work
+- **[learning-contracts](https://github.com/kase1111-hash/learning-contracts)** - Safety protocols for AI learning and data management
+
+### Security Infrastructure
+
+- **[Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM)** - Security Information and Event Management for AI systems
+
+### Game Development
+
+- **[Shredsquatch](https://github.com/kase1111-hash/Shredsquatch)** - 3D first-person snowboarding infinite runner (SkiFree homage)
+- **[Midnight-pulse](https://github.com/kase1111-hash/Midnight-pulse)** - Procedurally generated night drive
+- **[Long-Home](https://github.com/kase1111-hash/Long-Home)** - Atmospheric narrative game built with Godot
+
+---
+
+*HeLpER v0.1.0-alpha - Built with Tauri, Svelte, and Ollama for the authenticity economy*
