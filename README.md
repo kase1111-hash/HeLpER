@@ -183,6 +183,9 @@ HeLpER/
 ## Documentation
 
 - [User Guide](docs/USER_GUIDE.md) - Complete guide to using HeLpER
+- [Contributing](CONTRIBUTING.md) - Guidelines for contributors
+- [Changelog](CHANGELOG.md) - Version history and release notes
+- [Security](SECURITY.md) - Security policy and vulnerability reporting
 
 ## System Requirements
 
@@ -279,7 +282,7 @@ Security integration is optional and gracefully degrades when services are unava
 
 ## Contributing
 
-Contributions are welcome! Please open an issue first to discuss changes.
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on the development process, coding standards, and how to submit pull requests.
 
 ## License
 
