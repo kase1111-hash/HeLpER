@@ -30,7 +30,9 @@ pub fn create_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Erro
 
     // Build tray icon
     let tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(app.default_window_icon()
+            .ok_or_else(|| "Default window icon not found")?
+            .clone())
         .tooltip("HeLpER")
         .menu(&menu)
         .menu_on_left_click(false)

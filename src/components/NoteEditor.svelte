@@ -39,9 +39,11 @@
     }, AUTO_SAVE_DEBOUNCE_MS);
   }
 
-  // Handle STT result - append to content
+  // Handle STT result - append to content with length check
   function handleSTTResult(transcript: string) {
-    content = content + transcript + ' ';
+    const newContent = content + transcript + ' ';
+    // Enforce max length to prevent overflow
+    content = newContent.slice(0, NOTE_MAX_LENGTH);
     // Trigger save
     if ($selectedNote) {
       if (saveTimeout) clearTimeout(saveTimeout);
