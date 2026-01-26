@@ -196,7 +196,7 @@ pub async fn detect_location() -> Result<String, String> {
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
     let response = client
-        .get("http://ip-api.com/json/")
+        .get("https://ip-api.com/json/")
         .send()
         .await
         .map_err(|e| format!("Failed to detect location: {}", e))?;

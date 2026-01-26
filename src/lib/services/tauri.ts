@@ -7,12 +7,25 @@ import { createNote } from '../utils/note';
 import { currentDate } from '../stores/notes';
 import { get } from 'svelte/store';
 
+// Custom error class for Tauri operations
+export class TauriServiceError extends Error {
+  constructor(
+    public operation: string,
+    public originalError: unknown
+  ) {
+    const message = originalError instanceof Error ? originalError.message : String(originalError);
+    super(`${operation}: ${message}`);
+    this.name = 'TauriServiceError';
+  }
+}
+
 // Note operations
 export async function fetchNotesForDate(date: string): Promise<Note[]> {
   try {
     return await invoke<Note[]>('get_notes_for_date', { date });
   } catch (error) {
-    console.error('Failed to fetch notes:', error);
+    const tauriError = new TauriServiceError(`Failed to fetch notes for date ${date}`, error);
+    console.error(tauriError.message, { date, originalError: error });
     return [];
   }
 }
@@ -21,7 +34,8 @@ export async function saveNote(note: Note): Promise<Note | null> {
   try {
     return await invoke<Note>('create_note', { note });
   } catch (error) {
-    console.error('Failed to save note:', error);
+    const tauriError = new TauriServiceError('Failed to save note', error);
+    console.error(tauriError.message, { noteId: note.id, originalError: error });
     return null;
   }
 }
@@ -30,7 +44,8 @@ export async function updateNoteInDb(note: Note): Promise<Note | null> {
   try {
     return await invoke<Note>('update_note', { note });
   } catch (error) {
-    console.error('Failed to update note:', error);
+    const tauriError = new TauriServiceError('Failed to update note', error);
+    console.error(tauriError.message, { noteId: note.id, originalError: error });
     return null;
   }
 }
@@ -40,7 +55,8 @@ export async function deleteNoteFromDb(id: string, deletedAt: string): Promise<b
     await invoke('delete_note', { id, deletedAt });
     return true;
   } catch (error) {
-    console.error('Failed to delete note:', error);
+    const tauriError = new TauriServiceError('Failed to delete note', error);
+    console.error(tauriError.message, { id, deletedAt, originalError: error });
     return false;
   }
 }
@@ -50,11 +66,12 @@ export async function checkOllamaStatus(url: string): Promise<OllamaStatus> {
   try {
     return await invoke<OllamaStatus>('check_ollama_status', { url });
   } catch (error) {
-    console.error('Failed to check Ollama status:', error);
+    const tauriError = new TauriServiceError('Failed to check Ollama status', error);
+    console.error(tauriError.message, { url, originalError: error });
     return {
       connected: false,
       model: null,
-      error: String(error),
+      error: tauriError.message,
     };
   }
 }
@@ -75,7 +92,8 @@ export async function sendChatMessage(
       maxTokens,
     });
   } catch (error) {
-    console.error('Failed to send chat message:', error);
+    const tauriError = new TauriServiceError('Failed to send chat message', error);
+    console.error(tauriError.message, { url, model, messageCount: messages.length, originalError: error });
     return null;
   }
 }
