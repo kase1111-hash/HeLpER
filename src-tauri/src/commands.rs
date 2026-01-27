@@ -150,6 +150,25 @@ pub async fn delete_note(
     }
 }
 
+/// Check database health status
+#[tauri::command]
+pub async fn check_database_health(
+    db: State<'_, DbPool>,
+) -> Result<bool, String> {
+    let pool = db.0.lock().await;
+
+    if let Some(pool) = pool.as_ref() {
+        // Run a simple query to verify database is working
+        sqlx::query("SELECT 1")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Database health check failed: {}", e))?;
+        Ok(true)
+    } else {
+        Err("Database not initialized".to_string())
+    }
+}
+
 /// Check Ollama connection status
 #[tauri::command]
 pub async fn check_ollama_status(url: String) -> Result<OllamaStatus, String> {

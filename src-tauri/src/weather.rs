@@ -1,7 +1,8 @@
-use chrono::Utc;
+use chrono::{Local, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use urlencoding::encode;
 
 const WEATHER_API_TIMEOUT_SECS: u64 = 10;
 const WEATHERAPI_BASE_URL: &str = "https://api.weatherapi.com/v1";
@@ -97,7 +98,7 @@ fn map_condition_code(code: i32) -> String {
 }
 
 fn get_time_of_day() -> String {
-    let hour = Utc::now().hour();
+    let hour = Local::now().hour();
     match hour {
         5..=11 => "morning".to_string(),
         12..=16 => "afternoon".to_string(),
@@ -107,7 +108,7 @@ fn get_time_of_day() -> String {
 }
 
 fn get_day_of_week() -> String {
-    Utc::now().format("%A").to_string()
+    Local::now().format("%A").to_string()
 }
 
 fn get_moon_phase() -> String {
@@ -143,7 +144,7 @@ pub async fn fetch_weather(api_key: &str, location: &str) -> Result<WeatherData,
 
     let url = format!(
         "{}/current.json?key={}&q={}&aqi=no",
-        WEATHERAPI_BASE_URL, api_key, location
+        WEATHERAPI_BASE_URL, api_key, encode(location)
     );
 
     let response = client
