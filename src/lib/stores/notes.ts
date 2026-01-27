@@ -79,14 +79,13 @@ export async function updateNote(updatedNote: Note): Promise<void> {
   const previousNotes = get(notesMap).get(updatedNote.date) || [];
   const previousNote = previousNotes.find((n) => n.id === updatedNote.id);
 
-  // Optimistically update local state
+  // Optimistically update local state (immutably)
   notesMap.update((map) => {
     const dateNotes = map.get(updatedNote.date) || [];
-    const index = dateNotes.findIndex((n) => n.id === updatedNote.id);
-    if (index !== -1) {
-      dateNotes[index] = updatedNote;
-      map.set(updatedNote.date, [...dateNotes]);
-    }
+    const newDateNotes = dateNotes.map((n) =>
+      n.id === updatedNote.id ? updatedNote : n
+    );
+    map.set(updatedNote.date, newDateNotes);
     return new Map(map);
   });
 

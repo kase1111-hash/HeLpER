@@ -38,6 +38,7 @@ pub fn run() {
             commands::create_note,
             commands::update_note,
             commands::delete_note,
+            commands::check_database_health,
             commands::check_ollama_status,
             commands::send_chat_message,
             commands::get_weather,

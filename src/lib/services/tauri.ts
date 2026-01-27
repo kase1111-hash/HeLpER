@@ -61,6 +61,17 @@ export async function deleteNoteFromDb(id: string, deletedAt: string): Promise<b
   }
 }
 
+// Database health check
+export async function checkDatabaseHealth(): Promise<boolean> {
+  try {
+    return await invoke<boolean>('check_database_health');
+  } catch (error) {
+    const tauriError = new TauriServiceError('Database health check failed', error);
+    console.error(tauriError.message, { originalError: error });
+    return false;
+  }
+}
+
 // Ollama operations
 export async function checkOllamaStatus(url: string): Promise<OllamaStatus> {
   try {

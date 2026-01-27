@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { selectedNote, updateNote } from '../lib/stores/notes';
   import { updateNoteContent } from '../lib/utils/note';
   import { NOTE_MAX_LENGTH, AUTO_SAVE_DEBOUNCE_MS } from '../lib/constants';
@@ -17,6 +18,16 @@
   let content = '';
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
   let publishPanelOpen = false;
+  let isMounted = true;
+
+  // Cleanup on component destroy
+  onDestroy(() => {
+    isMounted = false;
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+      saveTimeout = null;
+    }
+  });
 
   // Sync content when selected note changes
   $: if ($selectedNote) {
@@ -29,10 +40,10 @@
     const target = event.target as HTMLTextAreaElement;
     content = target.value;
 
-    // Debounced auto-save
+    // Debounced auto-save with unmount check
     if (saveTimeout) clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
-      if ($selectedNote) {
+      if (isMounted && $selectedNote) {
         const updated = updateNoteContent($selectedNote, content);
         updateNote(updated);
       }
@@ -44,12 +55,14 @@
     const newContent = content + transcript + ' ';
     // Enforce max length to prevent overflow
     content = newContent.slice(0, NOTE_MAX_LENGTH);
-    // Trigger save
+    // Trigger save with unmount check
     if ($selectedNote) {
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
-        const updated = updateNoteContent($selectedNote, content);
-        updateNote(updated);
+        if (isMounted && $selectedNote) {
+          const updated = updateNoteContent($selectedNote, content);
+          updateNote(updated);
+        }
       }, AUTO_SAVE_DEBOUNCE_MS);
     }
   }
