@@ -59,43 +59,6 @@ HeLpER is designed with security and privacy as core principles:
 - Keys are never transmitted except to their respective services
 - Users can remove API keys at any time through Settings
 
-## Security Integrations
-
-HeLpER supports optional integration with security monitoring systems:
-
-### Boundary-SIEM Integration
-
-When enabled, HeLpER can report events to [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM):
-
-- Application lifecycle events (startup/shutdown)
-- Operation success/failure logging
-- Error reporting with severity levels
-- CEF-format local logging for SIEM ingestion
-
-### boundary-daemon Integration
-
-When enabled, HeLpER integrates with [boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-):
-
-- Policy checks before sensitive operations
-- Connection protection for network requests
-- Tripwire detection and lockdown handling
-- Boundary mode awareness (OPEN, RESTRICTED, TRUSTED, AIRGAP, COLDROOM, LOCKDOWN)
-
-### Configuration
-
-Security integrations are configured in `security-config.json`:
-
-```json
-{
-  "SiemEndpoint": "http://localhost:8080/api/v1/events",
-  "DaemonHttpEndpoint": "http://localhost:9090/api/v1",
-  "EnableSiem": true,
-  "EnableDaemon": true
-}
-```
-
-These integrations are **optional** and gracefully degrade when services are unavailable.
-
 ## Secure Development Practices
 
 ### Dependencies

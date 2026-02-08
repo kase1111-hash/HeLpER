@@ -99,10 +99,9 @@ build-windows.bat
 ```
 
 These scripts include:
-- Prerequisite checks (Node.js, Rust, PowerShell)
+- Prerequisite checks (Node.js, Rust)
 - Automatic retry logic for network operations
 - Detailed logging to `logs/` directory
-- Security integration with Boundary-SIEM and boundary-daemon
 
 ## Keyboard Shortcuts
 
@@ -172,12 +171,10 @@ HeLpER/
 ├── tests/                  # Unit tests
 ├── e2e/                    # End-to-end tests
 ├── scripts/                # Build and utility scripts
-│   └── security-integration.ps1  # Security module
 ├── docs/                   # Documentation
 ├── assemble-windows.bat    # Windows setup script
 ├── startup-windows.bat     # Windows dev server script
-├── build-windows.bat       # Windows build script
-└── security-config.json    # Security configuration
+└── build-windows.bat       # Windows build script
 ```
 
 ## Documentation
@@ -243,43 +240,6 @@ npm run tauri dev
 | **NatLangChain** | Publishing settings, author info, monetization defaults |
 | **Data** | Export and backup options |
 
-## Security Integration
-
-HeLpER includes optional integration with AI security monitoring systems for comprehensive trust enforcement:
-
-### Boundary-SIEM
-
-Reports events to [Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) for centralized AI security monitoring and security event management:
-
-- Application startup/shutdown events with agent security logs
-- Operation success/failure logging for security audit trails
-- Error reporting with severity levels and AI threat detection
-- CEF-format local logging for SIEM ingestion
-
-### boundary-daemon
-
-Integrates with [boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-) for AI trust enforcement and cognition boundary control:
-
-- Policy checks before sensitive operations via the trust layer for AI
-- Connection protection for network requests with cognitive firewall
-- Tripwire detection and lockdown mode handling
-- Boundary mode awareness (OPEN, RESTRICTED, TRUSTED, AIRGAP, COLDROOM, LOCKDOWN) for agent security policy
-
-### Configuration
-
-Edit `security-config.json` to configure security integration:
-
-```json
-{
-  "SiemEndpoint": "http://localhost:8080/api/v1/events",
-  "DaemonHttpEndpoint": "http://localhost:9090/api/v1",
-  "EnableSiem": true,
-  "EnableDaemon": true
-}
-```
-
-Security integration is optional and gracefully degrades when services are unavailable.
-
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on the development process, coding standards, and how to submit pull requests.
@@ -307,14 +267,9 @@ HeLpER is part of a larger ecosystem of tools for digital sovereignty, human-AI 
 
 - **[Agent-OS](https://github.com/kase1111-hash/Agent-OS)** - Natural-language native operating system for AI agents
 - **[synth-mind](https://github.com/kase1111-hash/synth-mind)** - NLOS-based agent with psychological modules for emergent continuity and empathy
-- **[boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-)** - Mandatory trust enforcement layer defining cognition boundaries
 - **[memory-vault](https://github.com/kase1111-hash/memory-vault)** - Secure, offline-capable, owner-sovereign storage for cognitive artifacts
 - **[value-ledger](https://github.com/kase1111-hash/value-ledger)** - Economic accounting layer for cognitive work
 - **[learning-contracts](https://github.com/kase1111-hash/learning-contracts)** - Safety protocols for AI learning and data management
-
-### Security Infrastructure
-
-- **[Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM)** - Security Information and Event Management for AI systems
 
 ### Game Development
 

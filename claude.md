@@ -130,7 +130,6 @@ Backend commands available via `@tauri-apps/api/core`:
 ## Security Notes
 
 - Local-first: all data stays on device
-- Optional Boundary-SIEM integration (see `security-config.json`)
 - CSP configured in `src-tauri/tauri.conf.json`
 - Never log sensitive user content
 

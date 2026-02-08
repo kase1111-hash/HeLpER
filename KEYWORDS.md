@@ -284,26 +284,6 @@ Query Targets:
 "AI learning safety"
 "AI training governance"
 
-🛡️ Security Infrastructure
-13. Boundary-SIEM
-Description: Security Information and Event Management system
-Primary Keywords:
-AI security monitoring
-agent SIEM
-security event management
-AI threat detection
-agent security logs
-cognitive security monitoring
-Long-tail Keywords:
-SIEM for AI systems
-monitor AI security events
-agent threat detection
-AI security audit logs
-Query Targets:
-"SIEM for AI"
-"AI security monitoring"
-"agent security events"
-
 🎮 Game Development
 14. Shredsquatch
 Description: 3D first-person snowboarding infinite runner (SkiFree homage)
