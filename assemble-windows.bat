@@ -3,20 +3,15 @@ setlocal EnableDelayedExpansion
 
 :: ============================================
 :: HeLpER - Windows Assembly Script
-:: With Boundary-SIEM and boundary-daemon integration
 :: ============================================
 
 :: Error codes
 set "ERR_NONE=0"
 set "ERR_NO_NODE=10"
 set "ERR_NO_RUST=11"
-set "ERR_NO_POWERSHELL=12"
-set "ERR_POLICY_DENIED=20"
 set "ERR_NPM_INSTALL=30"
 set "ERR_TAURI_INSTALL=31"
 set "ERR_CARGO_FETCH=32"
-set "ERR_SECURITY_INIT=40"
-set "ERR_CONNECTION_PROTECT=41"
 set "ERR_UNKNOWN=99"
 
 :: Initialize variables
@@ -43,7 +38,6 @@ call :log "============================================"
 
 echo ============================================
 echo  HeLpER - Windows Assembly Script
-echo  With Security Integration
 echo ============================================
 echo.
 
@@ -52,16 +46,6 @@ echo.
 :: ============================================
 call :log "[PHASE 1] Checking prerequisites..."
 echo [PHASE 1] Checking prerequisites...
-
-:: Check PowerShell (required for security integration)
-call :log "Checking PowerShell..."
-where powershell >nul 2>nul
-if %ERRORLEVEL% neq 0 (
-    call :error %ERR_NO_POWERSHELL% "PowerShell is not installed or not in PATH"
-    echo [ERROR] PowerShell is required for security integration
-    goto :cleanup
-)
-call :log "PowerShell: OK"
 
 :: Check Node.js
 call :log "Checking Node.js..."
@@ -92,54 +76,10 @@ echo   Rust: %RUST_VERSION%
 echo.
 
 :: ============================================
-:: Phase 2: Security Initialization
+:: Phase 2: NPM Dependencies
 :: ============================================
-call :log "[PHASE 2] Initializing security integration..."
-echo [PHASE 2] Initializing security integration...
-
-:: Initialize security module and report startup
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Send-StartupEvent -Mode 'assembly'; ^
-    $policy = Request-BoundaryPolicy -Resource 'package-install' -AccessType 'install'; ^
-    if (-not $policy.Allowed -and -not $policy.Unavailable) { exit 20 }; ^
-    exit 0"
-
-if %ERRORLEVEL% equ 20 (
-    call :error %ERR_POLICY_DENIED% "Assembly blocked by boundary policy"
-    echo [ERROR] Assembly operation blocked by security policy
-    echo Please check boundary-daemon configuration
-    goto :cleanup
-)
-
-if %ERRORLEVEL% neq 0 (
-    call :log "[WARNING] Security module initialization had issues (non-critical)"
-    echo [WARNING] Security integration unavailable (continuing anyway)
-) else (
-    call :log "Security module initialized successfully"
-    echo   Security integration: Active
-)
-
-:: Protect network connections
-call :log "Registering protected connections..."
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Protect-NetworkConnection -Destination 'registry.npmjs.org' -Port 443 -Purpose 'npm-install'; ^
-    Protect-NetworkConnection -Destination 'crates.io' -Port 443 -Purpose 'cargo-fetch'; ^
-    Protect-NetworkConnection -Destination 'github.com' -Port 443 -Purpose 'dependency-fetch'"
-
-echo   Protected connections: npm, crates.io, github
-echo.
-
-:: ============================================
-:: Phase 3: NPM Dependencies
-:: ============================================
-call :log "[PHASE 3] Installing npm dependencies..."
-echo [PHASE 3] Installing npm dependencies...
+call :log "[PHASE 2] Installing npm dependencies..."
+echo [PHASE 2] Installing npm dependencies...
 
 set "RETRY_COUNT=0"
 :npm_install_retry
@@ -156,20 +96,18 @@ if %ERRORLEVEL% neq 0 (
     )
 
     call :error %ERR_NPM_INSTALL% "Failed to install npm dependencies after %MAX_RETRIES% attempts"
-    call :report_error "ERR_NPM_INSTALL" "Failed to install npm dependencies" "npm" "high"
     echo [ERROR] Failed to install npm dependencies
     goto :cleanup
 )
 call :log "npm dependencies installed successfully"
-call :report_success "npm-install" "NPM dependencies installed"
 echo   npm dependencies: Installed
 echo.
 
 :: ============================================
-:: Phase 4: Tauri CLI
+:: Phase 3: Tauri CLI
 :: ============================================
-call :log "[PHASE 4] Installing Tauri CLI..."
-echo [PHASE 4] Installing Tauri CLI...
+call :log "[PHASE 3] Installing Tauri CLI..."
+echo [PHASE 3] Installing Tauri CLI...
 
 set "RETRY_COUNT=0"
 :tauri_install_retry
@@ -186,20 +124,18 @@ if %ERRORLEVEL% neq 0 (
     )
 
     call :error %ERR_TAURI_INSTALL% "Failed to install Tauri CLI after %MAX_RETRIES% attempts"
-    call :report_error "ERR_TAURI_INSTALL" "Failed to install Tauri CLI" "tauri" "high"
     echo [ERROR] Failed to install Tauri CLI
     goto :cleanup
 )
 call :log "Tauri CLI installed successfully"
-call :report_success "tauri-install" "Tauri CLI installed"
 echo   Tauri CLI: Installed
 echo.
 
 :: ============================================
-:: Phase 5: Rust Dependencies
+:: Phase 4: Rust Dependencies
 :: ============================================
-call :log "[PHASE 5] Fetching Rust dependencies..."
-echo [PHASE 5] Fetching Rust dependencies...
+call :log "[PHASE 4] Fetching Rust dependencies..."
+echo [PHASE 4] Fetching Rust dependencies...
 
 cd src-tauri
 set "RETRY_COUNT=0"
@@ -218,13 +154,11 @@ if %ERRORLEVEL% neq 0 (
 
     cd ..
     call :error %ERR_CARGO_FETCH% "Failed to fetch Rust dependencies after %MAX_RETRIES% attempts"
-    call :report_error "ERR_CARGO_FETCH" "Failed to fetch Rust dependencies" "cargo" "high"
     echo [ERROR] Failed to fetch Rust dependencies
     goto :cleanup
 )
 cd ..
 call :log "Rust dependencies fetched successfully"
-call :report_success "cargo-fetch" "Rust dependencies fetched"
 echo   Rust dependencies: Fetched
 echo.
 
@@ -245,15 +179,8 @@ echo Project is ready for development.
 echo   - Run startup-windows.bat to start the dev server
 echo   - Run build-windows.bat to create a release build
 echo.
-echo Security log: %LOG_FILE%
+echo Log: %LOG_FILE%
 echo.
-
-:: Report successful completion
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Send-ShutdownEvent -ExitCode 0 -Reason 'assembly-complete'"
 
 goto :end
 
@@ -262,13 +189,6 @@ goto :end
 :: ============================================
 :cleanup
 call :log "Assembly failed with exit code: %EXIT_CODE%"
-
-:: Report failure to security systems
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Send-ShutdownEvent -ExitCode %EXIT_CODE% -Reason 'assembly-failed'"
 
 echo.
 echo [FAILED] Assembly failed. Check log: %LOG_FILE%
@@ -290,20 +210,4 @@ exit /b 0
 :error
 set "EXIT_CODE=%~1"
 call :log "[ERROR] Code %~1: %~2"
-exit /b 0
-
-:report_success
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Send-SiemEvent -Action '%~1' -Outcome 'success' -Severity 'info' -Message '%~2'"
-exit /b 0
-
-:report_error
-powershell -ExecutionPolicy Bypass -Command ^
-    "$ErrorActionPreference = 'SilentlyContinue'; ^
-    . '%SCRIPT_DIR%scripts\security-integration.ps1'; ^
-    Initialize-SecurityModule; ^
-    Send-ErrorEvent -ErrorCode '%~1' -ErrorMessage '%~2' -Component '%~3' -Severity '%~4'"
 exit /b 0

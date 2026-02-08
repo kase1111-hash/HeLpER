@@ -15,8 +15,7 @@
 7. [Settings](#settings)
 8. [Export & Backup](#export--backup)
 9. [Windows Scripts](#windows-scripts)
-10. [Security Integration](#security-integration)
-11. [Troubleshooting](#troubleshooting)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -413,81 +412,11 @@ build-windows.bat
 - **Error Codes**: Structured error codes (10-99) for different failure scenarios
 - **Retry Logic**: Automatic retries (up to 3 attempts) for network operations
 - **Logging**: Timestamped logs saved to `logs/` directory
-- **Security Integration**: Reports to Boundary-SIEM and boundary-daemon
-
 ### Logs
 
 Scripts create detailed logs in the `logs/` directory:
 - `assembly-YYYYMMDD_HHMMSS.log` - Assembly script logs
 - `startup-YYYYMMDD_HHMMSS.log` - Startup script logs
-- `security-YYYY-MM-DD.log` - CEF-format security events
-
----
-
-## Security Integration
-
-HeLpER optionally integrates with security monitoring systems for enterprise environments.
-
-### Boundary-SIEM Integration
-
-[Boundary-SIEM](https://github.com/kase1111-hash/Boundary-SIEM) is a Security Information and Event Management platform. HeLpER can report events to it via REST API.
-
-**Events reported:**
-- Application startup and shutdown
-- Operation success/failure
-- Errors with severity levels
-- Dependency installation progress
-
-### boundary-daemon Integration
-
-[boundary-daemon](https://github.com/kase1111-hash/boundary-daemon-) provides policy enforcement for AI agent environments. HeLpER checks policies before sensitive operations.
-
-**Features:**
-- Policy checks before package installation
-- Connection protection for network requests
-- Tripwire detection (automatic lockdown on security violations)
-- Boundary mode awareness
-
-**Boundary Modes:**
-| Mode | Description |
-|------|-------------|
-| OPEN | No restrictions |
-| RESTRICTED | Limited access to sensitive resources |
-| TRUSTED | Operations allowed within trust boundaries |
-| AIRGAP | No external network access |
-| COLDROOM | Minimal operations allowed |
-| LOCKDOWN | All operations blocked (tripwire triggered) |
-
-### Configuration
-
-Edit `security-config.json` in the project root:
-
-```json
-{
-  "SiemEndpoint": "http://localhost:8080/api/v1/events",
-  "SiemApiKey": "",
-  "DaemonHttpEndpoint": "http://localhost:9090/api/v1",
-  "EnableSiem": true,
-  "EnableDaemon": true,
-  "LogPath": "./logs"
-}
-```
-
-| Setting | Description |
-|---------|-------------|
-| `SiemEndpoint` | Boundary-SIEM API URL |
-| `SiemApiKey` | API key for authentication (optional) |
-| `DaemonHttpEndpoint` | boundary-daemon API URL |
-| `EnableSiem` | Enable/disable SIEM reporting |
-| `EnableDaemon` | Enable/disable policy checks |
-| `LogPath` | Directory for local security logs |
-
-### Graceful Degradation
-
-Security integration is optional. When security services are unavailable:
-- Scripts continue to function normally
-- Warnings are logged but operations proceed
-- Local CEF-format logs are still created
 
 ---
 

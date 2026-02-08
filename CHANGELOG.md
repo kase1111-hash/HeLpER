@@ -51,13 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic prerequisite checks
   - Detailed logging to `logs/` directory
 
-- **Security Integration**
-  - Optional Boundary-SIEM event reporting
-  - Optional boundary-daemon policy checks
-  - CEF-format local logging
-  - Graceful degradation when services unavailable
-  - Configurable via `security-config.json`
-
 - **Developer Experience**
   - Comprehensive unit test suite with Vitest
   - End-to-end tests with Playwright
