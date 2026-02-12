@@ -27,7 +27,7 @@ src-tauri/              # Rust backend
   src/
     main.rs             # Entry point
     lib.rs              # Tauri setup
-    commands.rs         # IPC command handlers (13 commands)
+    commands.rs         # IPC command handlers (14 commands)
     database.rs         # SQLite operations
     ollama.rs           # Ollama API client
     natlangchain.rs     # Blockchain publishing
@@ -105,7 +105,7 @@ Backend commands available via `@tauri-apps/api/core`:
 - `check_database_health`, `check_ollama_status`
 - `send_chat_message`, `get_journal_context`
 - `get_weather`, `detect_location`
-- `nlc_validate_entry`, `nlc_publish_entry`, `nlc_get_stats`
+- `nlc_validate_entry`, `nlc_publish_entry`, `nlc_get_stats`, `nlc_check_connection`
 
 ## Testing Guidelines
 

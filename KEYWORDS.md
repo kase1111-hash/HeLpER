@@ -285,7 +285,7 @@ Query Targets:
 "AI training governance"
 
 🎮 Game Development
-14. Shredsquatch
+13. Shredsquatch
 Description: 3D first-person snowboarding infinite runner (SkiFree homage)
 Primary Keywords:
 snowboarding game
@@ -305,7 +305,7 @@ Query Targets:
 "snowboarding infinite runner"
 "3D skiing games"
 
-15. Midnight-pulse
+14. Midnight-pulse
 Description: Procedurally generated night drive
 Primary Keywords:
 night driving game
@@ -325,7 +325,7 @@ Query Targets:
 "night driving simulator"
 "synthwave driving game"
 
-16. Long-Home
+15. Long-Home
 Description: (Godot game project)
 Primary Keywords:
 indie game
@@ -335,7 +335,7 @@ atmospheric indie
 
 📋 Additional Repositories (Inferred from 25 total)
 The following repos likely exist based on ecosystem patterns. Update keywords when confirmed:
-17-25. Potential Repos:
+16-25. Potential Repos:
 NLOS documentation
 Constitutional layer specs
 Tile-Crawler (LLM dungeon crawler)

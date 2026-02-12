@@ -400,7 +400,6 @@ This script will:
 1. Verify prerequisites
 2. Auto-run assembly if dependencies are missing
 3. Start the Tauri development server
-4. Report events to security systems (if configured)
 
 **Building for production:**
 ```batch
@@ -475,7 +474,7 @@ Notes auto-save after you stop typing. If notes aren't persisting:
 1. Try resetting settings by deleting the config file:
    - **Windows**: `%APPDATA%\HeLpER\settings.json`
    - **macOS**: `~/Library/Application Support/HeLpER/settings.json`
-   - **Linux**: `~/.config/helper/settings.json`
+   - **Linux**: `~/.local/share/helper/settings.json`
 
 2. Reinstall the application
 
