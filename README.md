@@ -170,7 +170,6 @@ HeLpER/
 │       └── weather.rs      # Weather API client
 ├── tests/                  # Unit tests
 ├── e2e/                    # End-to-end tests
-├── scripts/                # Build and utility scripts
 ├── docs/                   # Documentation
 ├── assemble-windows.bat    # Windows setup script
 ├── startup-windows.bat     # Windows dev server script
@@ -246,7 +245,7 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE.md) for details.
 
 ---
 

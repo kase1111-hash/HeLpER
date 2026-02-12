@@ -169,11 +169,16 @@ connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natla
 ## 5. Test Coverage Analysis
 
 ### 5.1 Test Files Present
+- `tests/constants.test.ts` - Present
+- `tests/types.test.ts` - Present
 - `tests/stores/notes.test.ts` - 265 lines, comprehensive
 - `tests/stores/settings.test.ts` - Present
 - `tests/stores/chat.test.ts` - Present
+- `tests/stores/weather.test.ts` - Present
 - `tests/stores/ui.test.ts` - Present
 - `tests/services/tauri.test.ts` - 199 lines, comprehensive
+- `tests/services/weather.test.ts` - Present
+- `tests/services/natlangchain.test.ts` - Present
 - `tests/utils/note.test.ts` - Present
 - `tests/utils/date.test.ts` - Present
 
@@ -186,14 +191,15 @@ connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natla
 - Uses Vitest with proper isolation (beforeEach resets)
 
 **Gaps Identified:**
-1. No tests for `natlangchain.ts` service functions
-2. No tests for `weather.ts` store
-3. No E2E tests for publish workflow
-4. No integration tests for Rust backend
+1. No E2E tests for publish workflow
+2. No integration tests for Rust backend
+3. No component-level tests (Svelte components untested)
 
 ### 5.3 Estimated Coverage
-- Stores: ~80%
-- Services: ~60%
+- Stores: ~85% (notes, settings, chat, weather, ui)
+- Services: ~70% (tauri, weather, natlangchain)
+- Utils: ~90% (date, note)
+- Constants/Types: covered
 - Components: ~0% (no component tests)
 - Backend (Rust): ~0% (no Rust tests)
 
@@ -234,9 +240,8 @@ None identified.
 ### 7.3 Medium Priority
 1. Implement backup functionality (settings exist but unused)
 2. Add search functionality (store exists but unused)
-3. Add tests for NatLangChain service
-4. Add component-level tests with Testing Library
-5. Consider adding Rust unit tests
+3. Add component-level tests with Testing Library
+4. Consider adding Rust unit tests
 
 ### 7.4 Low Priority (Nice to Have)
 1. Add offline mode indicators
