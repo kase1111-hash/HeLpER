@@ -7,6 +7,7 @@ export interface Note {
   createdAt: string; // ISO 8601
   updatedAt: string; // ISO 8601
   deletedAt?: string; // Soft delete
+  aiProvenance?: 'human' | 'ai_edited' | 'ai_generated';
 }
 
 // Chat types
@@ -233,6 +234,9 @@ export interface NatLangChainEntry {
   articleMetadata?: ArticleMetadata;
   createdAt: string;
   hash?: string;
+  aiProvenance?: 'human' | 'ai_edited' | 'ai_generated';
+  signature?: string;
+  publicKey?: string;
 }
 
 export interface NatLangChainValidation {
@@ -269,4 +273,26 @@ export interface NatLangChainSettings {
   includeWeatherContext: boolean;
   includeLocationContext: boolean;
   autoAuditBeforePublish: boolean;
+}
+
+// Audit log types
+export interface AuditEntry {
+  id: number;
+  eventType: string;
+  eventData: string;
+  timestamp: string;
+  hash?: string;
+}
+
+// Secret scanning types
+export interface SecretFinding {
+  type: string;
+  pattern: string;
+  line: number;
+  redacted: string;
+}
+
+export interface SecretScanResult {
+  hasSecrets: boolean;
+  findings: SecretFinding[];
 }

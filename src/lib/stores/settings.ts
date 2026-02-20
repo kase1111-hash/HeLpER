@@ -9,6 +9,13 @@ import {
   DEFAULT_WEATHER_SETTINGS,
   DEFAULT_NATLANGCHAIN_SETTINGS,
 } from '../constants';
+import {
+  storeSecret,
+  getSecret,
+  computeSettingsHmac,
+  verifySettingsHmac,
+  logAuditEvent,
+} from '../services/tauri';
 
 const SETTINGS_STORE_PATH = 'settings.json';
 const SETTINGS_KEY = 'userSettings';
@@ -29,6 +36,8 @@ export const settings = writable<Settings>({
   natLangChain: { ...DEFAULT_NATLANGCHAIN_SETTINGS },
 });
 
+const KEYCHAIN_SERVICE = 'com.helper.app';
+
 // Initialize persistent store and load settings
 export async function initializeSettings(): Promise<void> {
   try {
@@ -36,15 +45,33 @@ export async function initializeSettings(): Promise<void> {
     const savedSettings = await persistentStore.get<Settings>(SETTINGS_KEY);
 
     if (savedSettings) {
+      // Verify settings integrity via HMAC
+      const storedHmac = await persistentStore.get<string>('settingsHmac');
+      if (storedHmac) {
+        const settingsJson = JSON.stringify(savedSettings);
+        const isValid = await verifySettingsHmac(settingsJson, storedHmac);
+        if (!isValid) {
+          console.warn('Settings integrity check failed - settings may have been tampered with');
+        }
+      }
+
       // Merge saved settings with defaults (in case new settings were added)
-      settings.set({
+      const mergedSettings: Settings = {
         app: { ...DEFAULT_APP_SETTINGS, ...savedSettings.app },
         ai: { ...DEFAULT_AI_SETTINGS, ...savedSettings.ai },
         data: { ...DEFAULT_DATA_SETTINGS, ...savedSettings.data },
         notifications: { ...DEFAULT_NOTIFICATION_SETTINGS, ...savedSettings.notifications },
         weather: { ...DEFAULT_WEATHER_SETTINGS, ...savedSettings.weather },
         natLangChain: { ...DEFAULT_NATLANGCHAIN_SETTINGS, ...savedSettings.natLangChain },
-      });
+      };
+
+      // Retrieve secrets from OS keychain instead of plaintext settings
+      const weatherApiKey = await getSecret(KEYCHAIN_SERVICE, 'weather_api_key');
+      if (weatherApiKey) {
+        mergedSettings.weather.apiKey = weatherApiKey;
+      }
+
+      settings.set(mergedSettings);
     }
 
     settingsLoaded.set(true);
@@ -60,7 +87,23 @@ async function saveSettings(): Promise<void> {
 
   try {
     const currentSettings = get(settings);
-    await persistentStore.set(SETTINGS_KEY, currentSettings);
+
+    // Extract secrets and store them in OS keychain instead of plaintext JSON
+    const settingsToSave = JSON.parse(JSON.stringify(currentSettings)) as Settings;
+    if (settingsToSave.weather.apiKey) {
+      await storeSecret(KEYCHAIN_SERVICE, 'weather_api_key', settingsToSave.weather.apiKey);
+      settingsToSave.weather.apiKey = ''; // Redact from plaintext file
+    }
+
+    await persistentStore.set(SETTINGS_KEY, settingsToSave);
+
+    // Compute and store HMAC for integrity verification
+    const settingsJson = JSON.stringify(settingsToSave);
+    const hmac = await computeSettingsHmac(settingsJson);
+    if (hmac) {
+      await persistentStore.set('settingsHmac', hmac);
+    }
+
     await persistentStore.save();
   } catch (error) {
     console.error('Failed to save settings:', error);
@@ -115,6 +158,8 @@ export function updateSettings(partial: Partial<Settings>): void {
   }));
   // Persist to disk
   saveSettings();
+  // Audit trail
+  logAuditEvent('settings_change', { changedKeys: Object.keys(partial) });
 }
 
 // Reset settings to defaults and persist

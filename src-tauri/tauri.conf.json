@@ -29,7 +29,7 @@
       "iconAsTemplate": true
     },
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natlangchain.com http://localhost:* http://127.0.0.1:*"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natlangchain.com http://localhost:11434 http://127.0.0.1:11434 http://localhost:5000 http://127.0.0.1:5000"
     }
   },
   "bundle": {

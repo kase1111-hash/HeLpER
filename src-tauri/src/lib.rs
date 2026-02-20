@@ -1,5 +1,7 @@
+mod author_identity;
 mod commands;
 mod database;
+mod integrity;
 mod natlangchain;
 mod ollama;
 mod tray;
@@ -48,6 +50,15 @@ pub fn run() {
             commands::nlc_publish_entry,
             commands::nlc_get_stats,
             commands::nlc_check_connection,
+            commands::log_audit_event,
+            commands::get_audit_log,
+            commands::store_secret,
+            commands::get_secret,
+            commands::delete_secret,
+            commands::compute_settings_hmac,
+            commands::verify_settings_hmac,
+            commands::nlc_get_author_public_key,
+            commands::nlc_sign_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

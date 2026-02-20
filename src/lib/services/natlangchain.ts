@@ -12,6 +12,8 @@ import type {
   StoryMetadata,
   ArticleMetadata,
 } from '../types';
+import { scanForSecrets } from '../utils/secretScanner';
+import { signEntry, getAuthorPublicKey, logAuditEvent } from './tauri';
 
 /**
  * Validate an entry before publishing
@@ -33,16 +35,46 @@ export async function validateEntry(
 
 /**
  * Publish an entry to NatLangChain
+ * Defense-in-depth: scans for secrets and signs entry before publishing
  */
 export async function publishEntry(
   apiUrl: string,
   entry: NatLangChainEntry
 ): Promise<NatLangChainPublishResult> {
+  // Defense-in-depth: block publish if content contains potential secrets
+  const scanResult = scanForSecrets(entry.content);
+  if (scanResult.hasSecrets) {
+    return {
+      success: false,
+      error: `Content contains potential secrets (${scanResult.findings.map(f => f.type).join(', ')}). Remove them before publishing.`,
+    };
+  }
+
   try {
-    return await invoke<NatLangChainPublishResult>('nlc_publish_entry', {
+    // Sign entry content with author's Ed25519 key
+    const signature = await signEntry(entry.content);
+    const publicKey = await getAuthorPublicKey();
+    const signedEntry = {
+      ...entry,
+      signature: signature || undefined,
+      publicKey: publicKey || undefined,
+    };
+
+    const result = await invoke<NatLangChainPublishResult>('nlc_publish_entry', {
       apiUrl,
-      entry,
+      entry: signedEntry,
     });
+
+    // Audit trail for successful publishes
+    if (result.success) {
+      logAuditEvent('nlc_publish', {
+        entryId: result.entryId,
+        blockHash: result.blockHash,
+        author: entry.author,
+      });
+    }
+
+    return result;
   } catch (error) {
     console.error('Failed to publish entry:', error);
     return {

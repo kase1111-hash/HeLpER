@@ -3,7 +3,7 @@
   import { settings } from '../lib/stores/settings';
   import { journalContext } from '../lib/stores/weather';
   import { showToast } from '../lib/stores/ui';
-  import { sendChatMessage } from '../lib/services/tauri';
+  import { sendChatMessage, logAuditEvent } from '../lib/services/tauri';
   import {
     validateEntry,
     publishEntry,
@@ -18,6 +18,7 @@
     getDefaultTags,
     extractChapterNumber,
   } from '../lib/services/natlangchain';
+  import { scanForSecrets } from '../lib/utils/secretScanner';
   import type {
     Note,
     MonetizationModel,
@@ -27,6 +28,7 @@
     StoryMetadata,
     ArticleMetadata,
     ArticleCategory,
+    SecretScanResult,
   } from '../lib/types';
 
   export let note: Note;
@@ -69,6 +71,9 @@
   let aiEditing = false;
   let validation: NatLangChainValidation | null = null;
   let activeTab: 'edit' | 'publish' = 'edit';
+  let aiEdited = false;
+  let secretScanResult: SecretScanResult | null = null;
+  let showSecretWarning = false;
 
   const genres = [
     'fiction',
@@ -204,6 +209,14 @@
       return;
     }
 
+    // Pre-publish secret scanning gate
+    secretScanResult = scanForSecrets(editedContent);
+    if (secretScanResult.hasSecrets) {
+      showSecretWarning = true;
+      showToast({ type: 'error', message: `Potential secrets detected (${secretScanResult.findings.length} found). Remove them before publishing.` });
+      return;
+    }
+
     // Validate first if auto-audit enabled
     if ($settings.natLangChain.autoAuditBeforePublish && !validation?.valid) {
       await handleValidate();
@@ -215,8 +228,9 @@
 
     publishing = true;
     try {
+      const noteWithProvenance = { ...note, content: editedContent, title };
       const entry = noteToEntry(
-        { ...note, content: editedContent, title },
+        noteWithProvenance,
         $settings.natLangChain.authorId || $settings.natLangChain.authorName || 'anonymous',
         intent,
         contentType,
@@ -227,6 +241,10 @@
         buildStoryMetadata(),
         buildArticleMetadata()
       );
+      // Track AI content provenance
+      if (aiEdited) {
+        entry.aiProvenance = 'ai_edited';
+      }
 
       const result = await publishEntry($settings.natLangChain.apiUrl, entry);
 
@@ -250,25 +268,25 @@
       return;
     }
 
-    // Content-type-specific prompts
+    // Content-type-specific prompts with delimiter tokens for data/instruction separation
     const promptsByType: Record<ContentType, Record<string, string>> = {
       journal: {
-        polish: `Polish this journal entry for publication. Make it more engaging while keeping the authentic voice. Keep it personal but publication-ready:\n\n${editedContent}`,
-        clarify: `Clarify and improve the clarity of this journal entry. Make the intent clear while preserving the personal voice:\n\n${editedContent}`,
-        expand: `Expand this journal entry with more detail and context. Add depth while keeping it authentic:\n\n${editedContent}`,
-        summarize: `Create a concise version of this journal entry, keeping the key insights and personal touch:\n\n${editedContent}`,
+        polish: `Polish the following journal entry for publication. Make it more engaging while keeping the authentic voice. Output only the polished version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        clarify: `Clarify and improve the clarity of the following journal entry. Make the intent clear while preserving the personal voice. Output only the clarified version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        expand: `Expand the following journal entry with more detail and context. Add depth while keeping it authentic. Output only the expanded version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        summarize: `Create a concise version of the following journal entry, keeping the key insights and personal touch. Output only the summary.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
       },
       article: {
-        polish: `Polish this news article for publication. Ensure it follows journalistic standards with clear, objective language. Maintain factual accuracy and proper attribution:\n\n${editedContent}`,
-        clarify: `Improve the clarity of this article. Ensure the lead paragraph captures the key points. Make facts and sources clear:\n\n${editedContent}`,
-        expand: `Expand this article with additional context, background information, and analysis. Add relevant details that inform readers:\n\n${editedContent}`,
-        summarize: `Create a concise summary of this article suitable for a news brief. Capture the essential who, what, when, where, why:\n\n${editedContent}`,
+        polish: `Polish the following news article for publication. Ensure it follows journalistic standards with clear, objective language. Output only the polished version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        clarify: `Improve the clarity of the following article. Ensure the lead paragraph captures the key points. Output only the clarified version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        expand: `Expand the following article with additional context, background information, and analysis. Output only the expanded version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        summarize: `Create a concise summary of the following article suitable for a news brief. Capture the essential who, what, when, where, why. Output only the summary.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
       },
       story_chapter: {
-        polish: `Polish this story chapter for publication. Enhance the prose, improve pacing, and strengthen the narrative voice while preserving the story:\n\n${editedContent}`,
-        clarify: `Improve the clarity of this story chapter. Ensure character motivations are clear and scenes are well-described. Maintain narrative flow:\n\n${editedContent}`,
-        expand: `Expand this story chapter with richer descriptions, deeper character development, and more atmospheric detail:\n\n${editedContent}`,
-        summarize: `Create a more concise version of this chapter, tightening the prose while keeping key plot points and emotional beats:\n\n${editedContent}`,
+        polish: `Polish the following story chapter for publication. Enhance the prose, improve pacing, and strengthen the narrative voice. Output only the polished version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        clarify: `Improve the clarity of the following story chapter. Ensure character motivations are clear and scenes are well-described. Output only the clarified version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        expand: `Expand the following story chapter with richer descriptions, deeper character development, and more atmospheric detail. Output only the expanded version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
+        summarize: `Create a more concise version of the following chapter, tightening the prose while keeping key plot points. Output only the summarized version.\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`,
       },
     };
 
@@ -295,7 +313,9 @@
 
       if (response) {
         editedContent = response.content;
+        aiEdited = true;
         showToast({ type: 'success', message: 'AI edit applied' });
+        logAuditEvent('ai_edit', { action, contentType });
       }
     } catch (error) {
       showToast({ type: 'error', message: 'AI editing failed' });
@@ -329,7 +349,7 @@
         $settings.ai.model,
         [
           { role: 'system', content: systemPromptsByType[contentType], timestamp: new Date().toISOString() },
-          { role: 'user', content: `What is the intent of this ${typeLabels[contentType]}?\n\n${editedContent}`, timestamp: new Date().toISOString() },
+          { role: 'user', content: `What is the intent of the following ${typeLabels[contentType]}?\n\n---BEGIN USER CONTENT---\n${editedContent}\n---END USER CONTENT---`, timestamp: new Date().toISOString() },
         ],
         0.3,
         100
@@ -729,6 +749,9 @@
             <div class="flex items-center gap-2 mb-3">
               <span class="text-lg">{getContentTypeIcon(contentType)}</span>
               <span class="text-xs text-earth-500 uppercase tracking-wide">{getContentTypeLabel(contentType)}</span>
+              {#if aiEdited}
+                <span class="text-xs px-1.5 py-0.5 bg-blue-900/30 text-blue-400 rounded">AI-Assisted</span>
+              {/if}
               {#if monetization !== 'free'}
                 <span class="text-xs text-accent ml-auto">{getMonetizationLabel(monetization)}</span>
               {/if}
@@ -766,6 +789,21 @@
               </div>
             {/if}
           </div>
+
+          <!-- Secret Scan Warning -->
+          {#if showSecretWarning && secretScanResult?.hasSecrets}
+            <div class="p-4 rounded-lg mb-4 bg-red-900/20 border border-red-500/30">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-red-400">Potential Secrets Detected</span>
+              </div>
+              <ul class="text-xs text-earth-400 list-disc list-inside">
+                {#each secretScanResult.findings.slice(0, 5) as finding}
+                  <li>Line {finding.line}: {finding.type} ({finding.redacted})</li>
+                {/each}
+              </ul>
+              <p class="text-xs text-red-400 mt-2">Remove all secrets before publishing to the blockchain.</p>
+            </div>
+          {/if}
 
           <!-- Validation Results -->
           {#if validation}

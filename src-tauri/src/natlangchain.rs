@@ -60,6 +60,9 @@ pub struct NatLangChainEntry {
     pub story_metadata: Option<StoryMetadata>,
     pub article_metadata: Option<ArticleMetadata>,
     pub created_at: String,
+    pub ai_provenance: Option<String>,
+    pub signature: Option<String>,
+    pub public_key: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -99,6 +102,10 @@ struct ApiEntryRequest {
     intent: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     metadata: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    signature: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    public_key: Option<String>,
 }
 
 // NatLangChain validation response structures
@@ -191,6 +198,12 @@ fn build_metadata(entry: &NatLangChainEntry) -> Option<serde_json::Value> {
         metadata.insert("article_metadata".to_string(), serde_json::to_value(article).unwrap_or_default());
     }
     metadata.insert("created_at".to_string(), serde_json::json!(&entry.created_at));
+    if let Some(provenance) = &entry.ai_provenance {
+        metadata.insert("ai_provenance".to_string(), serde_json::json!(provenance));
+    }
+    if let Some(pub_key) = &entry.public_key {
+        metadata.insert("author_public_key".to_string(), serde_json::json!(pub_key));
+    }
 
     Some(serde_json::Value::Object(metadata))
 }
@@ -202,6 +215,7 @@ pub async fn validate_entry(
 ) -> Result<ValidationResult, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(API_TIMEOUT_SECS))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
@@ -213,6 +227,8 @@ pub async fn validate_entry(
         author: entry.author.clone(),
         intent: entry.intent.clone(),
         metadata: build_metadata(entry),
+        signature: entry.signature.clone(),
+        public_key: entry.public_key.clone(),
     };
 
     let response = client
@@ -279,6 +295,7 @@ pub async fn publish_entry(
 ) -> Result<PublishResult, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(API_TIMEOUT_SECS))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
@@ -290,6 +307,8 @@ pub async fn publish_entry(
         author: entry.author.clone(),
         intent: entry.intent.clone(),
         metadata: build_metadata(entry),
+        signature: entry.signature.clone(),
+        public_key: entry.public_key.clone(),
     };
 
     let response = client
@@ -349,6 +368,7 @@ pub async fn get_author_stats(
 ) -> Result<ChainStats, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(API_TIMEOUT_SECS))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
@@ -393,6 +413,7 @@ pub async fn get_author_stats(
 pub async fn check_connection(api_url: &str) -> Result<bool, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(5))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
@@ -433,5 +454,8 @@ pub fn create_entry(
         story_metadata,
         article_metadata,
         created_at: Utc::now().to_rfc3339(),
+        ai_provenance: None,
+        signature: None,
+        public_key: None,
     }
 }
