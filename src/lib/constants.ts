@@ -76,32 +76,32 @@ export const DEFAULT_NATLANGCHAIN_SETTINGS: NatLangChainSettings = {
   autoAuditBeforePublish: true,
 };
 
-// Quick actions for AI
+// Quick actions for AI - uses delimiter tokens for data/instruction separation
 export const QUICK_ACTIONS: QuickActionConfig[] = [
   {
     id: 'format',
     label: 'Format',
-    prompt: 'Format this note with clear structure and bullet points:\n\n{note}',
+    prompt: 'Format the following user content with clear structure and bullet points. Output only the formatted version.\n\n---BEGIN USER CONTENT---\n{note}\n---END USER CONTENT---',
   },
   {
     id: 'expand',
     label: 'Expand',
-    prompt: 'Expand this brief note into 2-3 detailed paragraphs:\n\n{note}',
+    prompt: 'Expand the following user content into 2-3 detailed paragraphs. Output only the expanded version.\n\n---BEGIN USER CONTENT---\n{note}\n---END USER CONTENT---',
   },
   {
     id: 'summarize',
     label: 'Summarize',
-    prompt: 'Summarize this note in 2-3 bullet points:\n\n{note}',
+    prompt: 'Summarize the following user content in 2-3 bullet points. Output only the summary.\n\n---BEGIN USER CONTENT---\n{note}\n---END USER CONTENT---',
   },
   {
     id: 'grammar',
     label: 'Fix Grammar',
-    prompt: 'Fix any grammar or spelling errors in this note:\n\n{note}',
+    prompt: 'Fix any grammar or spelling errors in the following user content. Output only the corrected version.\n\n---BEGIN USER CONTENT---\n{note}\n---END USER CONTENT---',
   },
   {
     id: 'professional',
     label: 'Make Professional',
-    prompt: 'Rewrite this note in a professional tone:\n\n{note}',
+    prompt: 'Rewrite the following user content in a professional tone. Output only the rewritten version.\n\n---BEGIN USER CONTENT---\n{note}\n---END USER CONTENT---',
   },
 ];
 

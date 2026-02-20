@@ -109,6 +109,101 @@ export async function sendChatMessage(
   }
 }
 
+// Weather operations
+export async function getWeather(
+  apiKey: string,
+  location: string
+): Promise<unknown> {
+  try {
+    return await invoke('get_weather', { apiKey, location });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to get weather', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
+// Secret storage operations (OS keychain)
+export async function storeSecret(service: string, key: string, value: string): Promise<void> {
+  try {
+    await invoke('store_secret', { service, key, value });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to store secret', error);
+    console.error(tauriError.message, { originalError: error });
+  }
+}
+
+export async function getSecret(service: string, key: string): Promise<string | null> {
+  try {
+    return await invoke<string | null>('get_secret', { service, key });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to get secret', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
+export async function deleteSecret(service: string, key: string): Promise<void> {
+  try {
+    await invoke('delete_secret', { service, key });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to delete secret', error);
+    console.error(tauriError.message, { originalError: error });
+  }
+}
+
+// Settings integrity operations
+export async function computeSettingsHmac(settingsJson: string): Promise<string | null> {
+  try {
+    return await invoke<string>('compute_settings_hmac', { settingsJson });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to compute settings HMAC', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
+export async function verifySettingsHmac(settingsJson: string, hmacHex: string): Promise<boolean> {
+  try {
+    return await invoke<boolean>('verify_settings_hmac', { settingsJson, hmacHex });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to verify settings HMAC', error);
+    console.error(tauriError.message, { originalError: error });
+    return false;
+  }
+}
+
+// Audit log operations
+export async function logAuditEvent(eventType: string, eventData: object): Promise<void> {
+  try {
+    await invoke('log_audit_event', { eventType, eventData: JSON.stringify(eventData) });
+  } catch (error) {
+    // Audit logging should not block the user - fail silently
+    console.warn('Audit log failed:', error);
+  }
+}
+
+// Author identity operations
+export async function getAuthorPublicKey(): Promise<string | null> {
+  try {
+    return await invoke<string>('nlc_get_author_public_key');
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to get author public key', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
+export async function signEntry(content: string): Promise<string | null> {
+  try {
+    return await invoke<string>('nlc_sign_entry', { content });
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to sign entry', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
 // Event listeners for tray actions
 export function setupTrayListeners(): () => void {
   const unlisteners: (() => void)[] = [];

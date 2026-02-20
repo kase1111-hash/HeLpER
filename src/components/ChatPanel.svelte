@@ -22,7 +22,7 @@
     toggleSTT,
     stopSTT,
   } from '../lib/stores/stt';
-  import { sendChatMessage } from '../lib/services/tauri';
+  import { sendChatMessage, logAuditEvent } from '../lib/services/tauri';
   import { QUICK_ACTIONS } from '../lib/constants';
   import type { ChatMessage, QuickAction } from '../lib/types';
   import { getTimestamp } from '../lib/utils/date';
@@ -104,18 +104,21 @@
       const existingMessages = get(chatMessages);
       if (existingMessages.length === 1) {
         // Only the user message we just added, so this is a new conversation
-        let systemContent = systemPrompt;
-
-        // Include note context if enabled and a note is selected
-        if (includeNoteContext && $selectedNote && $selectedNote.content.trim()) {
-          systemContent += `\n\nCurrent note context:\n${$selectedNote.content}`;
-        }
-
         messagesToSend.push({
           role: 'system',
-          content: systemContent,
+          content: systemPrompt,
           timestamp: getTimestamp(),
         });
+
+        // Include note context as a separate user-role message with delimiters
+        // to enforce data/instruction separation (prevents prompt injection)
+        if (includeNoteContext && $selectedNote && $selectedNote.content.trim()) {
+          messagesToSend.push({
+            role: 'user',
+            content: `---BEGIN NOTE CONTEXT---\n${$selectedNote.content}\n---END NOTE CONTEXT---`,
+            timestamp: getTimestamp(),
+          });
+        }
       }
 
       // Add all conversation messages
@@ -137,6 +140,7 @@
 
       if (response) {
         addChatMessage(response);
+        logAuditEvent('ai_chat', { model, messageCount: messagesToSend.length });
       } else {
         // API returned null - add error message
         addChatMessage({

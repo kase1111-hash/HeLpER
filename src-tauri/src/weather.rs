@@ -139,16 +139,21 @@ pub async fn fetch_weather(api_key: &str, location: &str) -> Result<WeatherData,
 
     let client = Client::builder()
         .timeout(Duration::from_secs(WEATHER_API_TIMEOUT_SECS))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 
+    // NOTE: WeatherAPI.com only supports API key via query parameter (no header auth available).
+    // Mitigations: HTTPS enforced via WEATHERAPI_BASE_URL encrypts the key in transit;
+    // the key is stored in the OS keychain rather than plaintext settings to limit exposure.
     let url = format!(
-        "{}/current.json?key={}&q={}&aqi=no",
-        WEATHERAPI_BASE_URL, api_key, encode(location)
+        "{}/current.json",
+        WEATHERAPI_BASE_URL
     );
 
     let response = client
         .get(&url)
+        .query(&[("key", api_key), ("q", location), ("aqi", "no")])
         .send()
         .await
         .map_err(|e| format!("Failed to fetch weather: {}", e))?;
@@ -193,6 +198,7 @@ pub async fn fetch_weather(api_key: &str, location: &str) -> Result<WeatherData,
 pub async fn detect_location() -> Result<String, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(5))
+        .redirect(reqwest::redirect::Policy::none())
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 

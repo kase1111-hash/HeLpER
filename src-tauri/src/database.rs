@@ -99,5 +99,49 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .execute(pool)
     .await?;
 
+    // Audit log table for tracking AI interactions, publishes, and settings changes
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type  TEXT NOT NULL,
+            event_data  TEXT NOT NULL,
+            timestamp   TEXT NOT NULL,
+            hash        TEXT
+        )
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_audit_log_type ON audit_log(event_type)
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    sqlx::query(
+        r#"
+        CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)
+        "#,
+    )
+    .execute(pool)
+    .await?;
+
+    // Migration: add ai_provenance column to notes table if not present
+    let columns: Vec<(String,)> = sqlx::query_as(
+        "SELECT name FROM pragma_table_info('notes') WHERE name = 'ai_provenance'"
+    )
+    .fetch_all(pool)
+    .await?;
+
+    if columns.is_empty() {
+        sqlx::query("ALTER TABLE notes ADD COLUMN ai_provenance TEXT DEFAULT 'human'")
+            .execute(pool)
+            .await?;
+    }
+
     Ok(())
 }
