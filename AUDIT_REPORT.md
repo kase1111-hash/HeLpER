@@ -1,213 +1,57 @@
-# HeLpER Software Audit Report
+# HeLpER Audit Report
 
-**Audit Date:** 2026-01-27
 **Software Version:** 0.1.0-alpha
-**Auditor:** Claude Opus 4.5
+**Last Updated:** 2026-02-20
+
+This document consolidates all project assessments: the software quality audit, the agentic security audit, and the product evaluation. Remediation status is noted where security findings have been addressed.
+
+---
 
 ## Executive Summary
 
-HeLpER ("Helpful Lightweight Personal Everyday Recorder") is a well-architected, privacy-first personal journal application built with Svelte/TypeScript (frontend) and Rust/Tauri (backend). The codebase demonstrates professional software engineering practices with a clear separation of concerns, comprehensive type safety, and thoughtful error handling.
+HeLpER ("Helpful Lightweight Personal Everyday Recorder") is a privacy-first personal journal application built with Svelte/TypeScript (frontend) and Rust/Tauri (backend). The application integrates local AI via Ollama, weather context, and NatLangChain blockchain publishing.
 
-**Overall Assessment: GOOD** - The software is fit for its stated purpose with minor issues identified.
+| Assessment Area | Rating | Notes |
+|----------------|--------|-------|
+| Software Quality | **GOOD** | Clean architecture, strong type safety, proper error handling |
+| Agentic Security | **MODERATE RISK** | 11 findings identified; all remediated (see Section 3) |
+| Product Focus | **NEEDS REFOCUS** | Core journaling is solid; NatLangChain publishing is over-scoped |
 
 ---
 
-## 1. Architecture Review
+## 1. Software Quality Audit
 
-### Strengths
-- **Clean separation of concerns**: Frontend (Svelte) and backend (Rust/Tauri) are properly decoupled
-- **Local-first design**: All data stored locally via SQLite, respecting user privacy
+**Auditor:** Claude Opus 4.5 | **Date:** 2026-01-27
+
+### 1.1 Architecture
+
+- **Clean separation of concerns**: Frontend (Svelte) and backend (Rust/Tauri) properly decoupled via typed IPC
+- **Local-first design**: All data stored locally via SQLite
 - **Graceful degradation**: Optional features (AI, weather, blockchain) fail gracefully when unavailable
 - **Modern tech stack**: Tauri 2.0, Svelte 4, TypeScript 5.4+, SQLx for type-safe SQL
 
-### Architecture Diagram
-```
-Frontend (Svelte/TS)     Backend (Rust/Tauri)     External Services
-+------------------+     +------------------+     +------------------+
-| Components       |     | Commands         |     | Ollama (local)   |
-| - NoteEditor     | --> | - get_notes      | --> | WeatherAPI.com   |
-| - ChatPanel      |     | - create_note    |     | NatLangChain     |
-| - PublishPanel   |     | - send_chat      |     | ip-api.com       |
-+------------------+     +------------------+     +------------------+
-        |                        |
-        v                        v
-+------------------+     +------------------+
-| Stores (State)   |     | SQLite Database  |
-| - notes.ts       |     | - notes table    |
-| - settings.ts    |     | - settings table |
-| - chat.ts        |     | - metadata table |
-+------------------+     +------------------+
-```
+### 1.2 Correctness
 
----
+**Backend (Rust):** All 6 modules pass review. Minor issues: database async init could benefit from startup health checks; weather time-of-day uses UTC instead of local timezone.
 
-## 2. Correctness Analysis
+**Frontend (TypeScript/Svelte):** All stores and services pass review. Minor issues: potential reactivity edge case in notes store array mutation; auto-save doesn't check component mount state.
 
-### 2.1 Backend (Rust)
+**Components:** All 13 components pass review. Comprehensive validation workflow in PublishPanel.
 
-| File | Status | Notes |
-|------|--------|-------|
-| `commands.rs` | PASS | Clean command handlers with proper error propagation |
-| `database.rs` | PASS | Proper async initialization with appropriate indices |
-| `ollama.rs` | PASS | Good timeout handling (5s status, 120s chat) |
-| `weather.rs` | PASS | Proper weather code mapping and fallbacks |
-| `natlangchain.rs` | PASS | Comprehensive API handling with validation |
-| `tray.rs` | PASS | Proper event handling for system tray |
+### 1.3 Test Coverage
 
-**Minor Issues:**
-1. **`database.rs:28`** - Database initialization spawns async without blocking. If database fails to initialize, subsequent commands will fail with "Database not initialized". This is acceptable behavior but could be improved with startup health checks.
+| Area | Coverage | Notes |
+|------|----------|-------|
+| Stores | ~85% | notes, settings, chat, weather, ui |
+| Services | ~70% | tauri, weather, natlangchain |
+| Utils | ~90% | date, note |
+| Components | ~0% | No component tests |
+| Backend (Rust) | ~0% | No Rust tests |
 
-2. **`weather.rs:99-106`** - Time of day detection uses UTC time, not local time. Users in different timezones may see incorrect "morning/evening" labels.
+**Gaps:** No E2E tests for publish workflow, no integration tests for Rust backend, no component-level tests.
 
-### 2.2 Frontend (TypeScript/Svelte)
+### 1.4 Code Quality
 
-| File | Status | Notes |
-|------|--------|-------|
-| `stores/notes.ts` | PASS | Proper optimistic updates with rollback |
-| `stores/settings.ts` | PASS | Good merge strategy for settings updates |
-| `stores/chat.ts` | PASS | Proper connection status management |
-| `stores/ui.ts` | PASS | Clean toast notification handling |
-| `services/tauri.ts` | PASS | Comprehensive error handling |
-| `services/natlangchain.ts` | PASS | Good content type detection heuristics |
-
-**Minor Issues:**
-1. **`stores/notes.ts:86-88`** - When updating a note, the array is mutated in place (`dateNotes[index] = updatedNote`) before spreading. This could theoretically cause reactivity issues in edge cases.
-
-2. **`NoteEditor.svelte:35-40`** - Auto-save uses a debounce timeout but doesn't check if component is still mounted. If user navigates away quickly, the save could fail silently.
-
-### 2.3 Components
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `App.svelte` | PASS | Proper lifecycle management |
-| `NoteEditor.svelte` | PASS | Good character limit enforcement |
-| `ChatPanel.svelte` | PASS | Proper error message parsing |
-| `PublishPanel.svelte` | PASS | Comprehensive validation workflow |
-
----
-
-## 3. Security Assessment
-
-### 3.1 Content Security Policy (CSP)
-```
-default-src 'self';
-script-src 'self';
-style-src 'self' 'unsafe-inline';
-img-src 'self' data: https:;
-connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natlangchain.com http://localhost:* http://127.0.0.1:*
-```
-
-**Assessment:** ADEQUATE
-- CSP is properly configured in `tauri.conf.json`
-- `'unsafe-inline'` for styles is a known Svelte/Tailwind requirement
-- External connections are restricted to specific services
-
-### 3.2 Data Security
-
-| Aspect | Status | Notes |
-|--------|--------|-------|
-| SQL Injection | SAFE | Uses parameterized queries via `sqlx::query!` macro |
-| XSS | SAFE | Svelte auto-escapes by default |
-| Local Storage | ADEQUATE | SQLite not encrypted (documented limitation) |
-| API Keys | ADEQUATE | Stored locally in app's secure store |
-| Network | SAFE | Optional features, HTTPS enforced where possible |
-
-### 3.3 Security Concerns (Minor)
-
-1. **`weather.rs:146`** - Weather API URL construction uses string formatting. While API keys are validated as non-empty, URL encoding is not applied to the location parameter:
-   ```rust
-   let url = format!("{}/current.json?key={}&q={}&aqi=no", WEATHERAPI_BASE_URL, api_key, location);
-   ```
-   **Recommendation:** Use `urlencoding::encode()` for the location parameter.
-
-2. **`weather.rs:199`** - IP geolocation uses HTTP (`http://ip-api.com/json/`), not HTTPS:
-   ```rust
-   .get("https://ip-api.com/json/")  // Actually correct - it's HTTPS
-   ```
-   **Note:** The code actually uses HTTPS - this is fine.
-
-3. **No database encryption at rest** - Documented limitation. Users should rely on OS-level encryption.
-
----
-
-## 4. Fitness for Purpose
-
-### 4.1 Core Requirements Met
-
-| Feature | Implemented | Quality |
-|---------|-------------|---------|
-| Daily note organization | Yes | Excellent |
-| Multiple notes per day | Yes | Good |
-| Auto-save functionality | Yes | Good (500ms debounce) |
-| Calendar navigation | Yes | Good |
-| Local AI integration (Ollama) | Yes | Excellent |
-| Weather context | Yes | Good |
-| Blockchain publishing (NatLangChain) | Yes | Good |
-| System tray integration | Yes | Good |
-| Cross-platform support | Yes | Excellent |
-
-### 4.2 Feature Quality Assessment
-
-**Excellent:**
-- Privacy-first architecture
-- Ollama integration with health checks
-- Optimistic updates with rollback
-- Content type detection for publishing
-
-**Good:**
-- Error handling and user feedback
-- Settings persistence with merge strategy
-- Keyboard shortcuts
-
-**Areas for Improvement:**
-- No offline indication for weather/NatLangChain
-- No note search functionality (searchQuery store exists but unused)
-- No data export automation (backup settings present but not implemented)
-
----
-
-## 5. Test Coverage Analysis
-
-### 5.1 Test Files Present
-- `tests/constants.test.ts` - Present
-- `tests/types.test.ts` - Present
-- `tests/stores/notes.test.ts` - 265 lines, comprehensive
-- `tests/stores/settings.test.ts` - Present
-- `tests/stores/chat.test.ts` - Present
-- `tests/stores/weather.test.ts` - Present
-- `tests/stores/ui.test.ts` - Present
-- `tests/services/tauri.test.ts` - 199 lines, comprehensive
-- `tests/services/weather.test.ts` - Present
-- `tests/services/natlangchain.test.ts` - Present
-- `tests/utils/note.test.ts` - Present
-- `tests/utils/date.test.ts` - Present
-
-### 5.2 Test Quality
-
-**Strengths:**
-- Proper mock setup for Tauri APIs
-- Good coverage of store functionality
-- Tests include error cases and edge conditions
-- Uses Vitest with proper isolation (beforeEach resets)
-
-**Gaps Identified:**
-1. No E2E tests for publish workflow
-2. No integration tests for Rust backend
-3. No component-level tests (Svelte components untested)
-
-### 5.3 Estimated Coverage
-- Stores: ~85% (notes, settings, chat, weather, ui)
-- Services: ~70% (tauri, weather, natlangchain)
-- Utils: ~90% (date, note)
-- Constants/Types: covered
-- Components: ~0% (no component tests)
-- Backend (Rust): ~0% (no Rust tests)
-
----
-
-## 6. Code Quality Metrics
-
-### 6.1 Codebase Size
 | Category | Lines |
 |----------|-------|
 | Rust Backend | ~1,309 |
@@ -215,55 +59,109 @@ connect-src 'self' https://api.weatherapi.com https://ip-api.com https://*.natla
 | Tests | ~1,757 |
 | **Total** | ~8,714 |
 
-### 6.2 Dependencies
-- **Frontend:** Appropriately minimal (Svelte, Tailwind, Tauri plugins)
-- **Backend:** Well-chosen (sqlx, reqwest, serde, chrono)
-- **No known vulnerabilities** in dependencies at time of audit
-
-### 6.3 Code Style
-- TypeScript: Strict mode enabled, consistent formatting
-- Rust: Follows standard conventions, proper error handling with `Result`
-- Documentation: Inline comments present where needed
+Dependencies are minimal and well-chosen. No known vulnerabilities at time of audit. TypeScript strict mode enabled. Consistent error handling patterns throughout.
 
 ---
 
-## 7. Recommendations
+## 2. Product Evaluation
 
-### 7.1 Critical (Should Fix Before Production)
-None identified.
+**Auditor:** Claude Opus 4.6 | **Date:** 2026-02-20
 
-### 7.2 High Priority
-1. **URL encode weather location parameter** (`weather.rs:146`)
-2. **Fix time-of-day to use local timezone** (`weather.rs:99-106`)
-3. **Add component unmount check for auto-save** (`NoteEditor.svelte:35-40`)
+### 2.1 Concept
 
-### 7.3 Medium Priority
-1. Implement backup functionality (settings exist but unused)
-2. Add search functionality (store exists but unused)
-3. Add component-level tests with Testing Library
-4. Consider adding Rust unit tests
+The core concept (private journal + local AI) is sound and solves a genuine problem. The target user fragments when NatLangChain publishing expands scope to fiction authors, citizen journalists, and blockchain users simultaneously.
 
-### 7.4 Low Priority (Nice to Have)
-1. Add offline mode indicators
-2. Consider encrypting SQLite database at rest
-3. Add telemetry opt-in for crash reporting
-4. Implement data retention policies for soft-deleted notes
+**Value prop:** "A private desktop journal that uses local AI to help you write, with optional blockchain publishing."
 
----
+### 2.2 Execution
 
-## 8. Conclusion
+The Tauri + Svelte + Rust stack is well-chosen. Core journaling features are solid (optimistic updates with rollback, auto-save with debouncing, clean store architecture). However:
 
-HeLpER is a **well-engineered application** that achieves its stated purpose of being a "Helpful Lightweight Personal Everyday Recorder" with privacy-first design. The codebase demonstrates:
+- `natlangchain.rs` (437 lines) is the largest backend module, outweighing core note CRUD
+- `PublishPanel.svelte` (834 lines) is 4x larger than `NoteEditor.svelte` (191 lines)
+- Content type detection heuristics are fragile
+- `ChainStats` has placeholder fields hardcoded to 0
 
-- Professional architecture and separation of concerns
-- Strong type safety with TypeScript and Rust
-- Thoughtful error handling throughout
-- Good security practices with appropriate CSP configuration
+### 2.3 Scope Assessment
 
-The identified issues are minor and do not impact the core functionality or security posture of the application. The software is **fit for purpose** as a privacy-first journal application with optional AI and blockchain features.
+| Category | Features |
+|----------|----------|
+| **Core** | Daily notes, auto-save, calendar navigation, SQLite storage |
+| **Supporting** | AI chat, search, export/backup, system tray, themes, onboarding, keyboard shortcuts |
+| **Nice-to-Have** | Weather context, speech-to-text, auto-location |
+| **Over-scoped** | NatLangChain publishing, multiple content types, monetization models, article/story metadata |
 
-**Recommendation:** Proceed with alpha testing. Address high-priority items before beta release.
+### 2.4 Recommendation
+
+**Refocus:** The core product is well-built. Consider extracting NatLangChain into a dedicated publishing client and investing in the editor experience (markdown, tagging, global search) and AI features (weekly summaries, mood detection).
 
 ---
 
-*This audit was conducted by reviewing source code, configuration files, and test suites. No dynamic testing or penetration testing was performed.*
+## 3. Agentic Security Audit
+
+**Auditor:** Claude Opus 4.6 | **Date:** 2026-02-20
+**Methodology:** Three-Tier Agentic Security Framework
+
+### 3.1 Vulnerability Summary
+
+All 11 findings have been remediated. Implementation commit: `7b7716c`.
+
+| # | Finding | Severity | Status |
+|---|---------|----------|--------|
+| 1 | API keys stored in plaintext JSON | HIGH | **FIXED** - Keys now stored in OS keychain via `keyring` crate |
+| 2 | No outbound secret scanning before publish | HIGH | **FIXED** - `secretScanner.ts` with 11 regex patterns; pre-publish gate in UI + defense-in-depth in service layer |
+| 3 | CSP `connect-src` allows all localhost ports | MEDIUM | **FIXED** - Restricted to ports 11434 (Ollama) and 5000 (NatLangChain) |
+| 4 | No AI content provenance tracking | MEDIUM | **FIXED** - `ai_provenance` column in DB; tracked through Note and NatLangChainEntry types; UI badge |
+| 5 | No data/instruction separation in AI prompts | MEDIUM | **FIXED** - `---BEGIN/END USER CONTENT---` delimiters in all 17+ prompts; note context as separate user-role message |
+| 6 | Settings file has no integrity protection | MEDIUM | **FIXED** - HMAC-SHA256 with device-local keychain key via `integrity.rs` |
+| 7 | NatLangChain publish has no author authentication | MEDIUM | **FIXED** - Ed25519 keypair via `author_identity.rs`; entries signed before publish |
+| 8 | HTTP clients follow redirects by default | LOW | **FIXED** - `redirect(Policy::none())` on all 8 `Client::builder()` calls |
+| 9 | No audit trail for AI interactions or publishes | LOW | **FIXED** - `audit_log` table with hash chain; logging in chat, publish, AI edit, settings |
+| 10 | `img-src https:` allows any HTTPS image source | LOW | **FIXED** - Restricted to `'self' data:` |
+| 11 | WeatherAPI key transmitted in URL query string | LOW | **MITIGATED** - WeatherAPI only supports query params; documented limitation; HTTPS enforced; key stored in OS keychain |
+
+### 3.2 Tier Assessment (Post-Remediation)
+
+| Tier | Before | After |
+|------|--------|-------|
+| **Tier 1: Foundational** | PARTIAL | GOOD - OS keychain for secrets, tight CSP, Ed25519 author identity |
+| **Tier 2: Agentic Integrity** | WEAK | GOOD - Delimiter-based prompt separation, content provenance, outbound secret scanning |
+| **Tier 3: Coordination** | NOT IMPLEMENTED | PARTIAL - Audit trail with hash chain, author signing; still no mutual TLS or per-command capabilities |
+
+### 3.3 Positive Security Properties
+
+These strong practices were already in place before remediation:
+
+1. Zero `{@html}` usage - Svelte default text escaping prevents XSS
+2. All SQL via `sqlx::query!` macros - parameterized queries prevent injection
+3. Tauri IPC boundary - frontend cannot access filesystem/DB/OS directly
+4. No `eval()` or dynamic code execution
+5. Proper error handling without stack trace exposure
+6. HTTPS enforced for external APIs
+7. Soft delete pattern for data recovery
+8. No telemetry or tracking
+
+### 3.4 Remaining Recommendations
+
+| Priority | Recommendation |
+|----------|---------------|
+| Medium | Add component-level tests with Testing Library |
+| Medium | Add Rust unit tests for new security modules |
+| Medium | Consider per-command Tauri capabilities (v2 feature) |
+| Low | Add mutual TLS for non-localhost service connections |
+| Low | Add offline mode indicators |
+| Low | Consider encrypting SQLite database at rest |
+
+---
+
+## Methodology Notes
+
+**Software Quality Audit:** Static analysis of source code, configuration files, and test suites. No dynamic testing performed.
+
+**Product Evaluation:** Assessment of concept, execution quality, scope, and market fit based on code analysis and feature review.
+
+**Agentic Security Audit:** Three-tier framework evaluating foundational controls (credentials, permissions, identity), agentic integrity (prompt separation, provenance, secret scanning), and coordination controls (audit trails, authentication, anti-C2). Static analysis only; no penetration testing.
+
+---
+
+*This report consolidates the Software Audit Report (2026-01-27), Agentic Security Audit (2026-02-20), and Product Evaluation Report (2026-02-20).*

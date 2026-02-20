@@ -2,9 +2,9 @@
 
 **Helpful Lightweight Personal Everyday Recorder**
 
-A privacy-first personal journal application with local AI integration for the authenticity economy. HeLpER combines prose-first note-taking with intent preservation, weather-aware journal context, and natural language blockchain publishing via NatLangChain.
+A privacy-first personal journal application with local AI integration. HeLpER combines daily note-taking with weather-aware journal context, local AI assistance through Ollama, and optional NatLangChain blockchain publishing.
 
-Built for digital sovereignty and human-AI collaboration, HeLpER keeps all your cognitive work on your device while offering optional self-hosted AI assistance through Ollama. Perfect as a family journal app, personal knowledge base, or daily decision documentation tool.
+All your data stays on your device. AI runs locally. No cloud sync. No telemetry.
 
 ![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
@@ -14,94 +14,72 @@ Built for digital sovereignty and human-AI collaboration, HeLpER keeps all your 
 
 ## Features
 
-### Core Features
+### Core
 
-- **Daily Notes** - Organize notes by date with easy calendar navigation for personal reasoning audit trails
-- **AI Assistant** - Local LLM integration via Ollama for note formatting, expansion, and human-AI collaboration in writing
-- **Auto-Save** - Notes save automatically as you type, preserving your cognitive work
+- **Daily Notes** - Organize notes by date with calendar navigation
+- **AI Assistant** - Local LLM integration via Ollama for formatting, expansion, and chat
+- **Auto-Save** - Notes save automatically as you type
 - **System Tray** - Minimize to tray for quick access
-- **Search** - Find notes instantly with full-text search across your private knowledge base
-- **Export** - Save notes as Markdown or JSON for data ownership and portability
-- **Privacy First** - All data stays on your device with owned AI infrastructure
+- **Search** - Full-text search across notes
+- **Export** - Save notes as Markdown or JSON
+- **Privacy First** - All data stays on your device
 
 ### Journal Context
 
-- **Weather Integration** - Real-time weather data via WeatherAPI.com
-- **Time of Day** - Automatic detection of morning, afternoon, evening, night
-- **Moon Phases** - Track lunar cycles for your journal entries
-- **Auto-Location** - Detect your location automatically via IP
+- **Weather** - Real-time weather data via WeatherAPI.com
+- **Time of Day** - Morning, afternoon, evening, night detection
+- **Moon Phases** - Lunar cycle tracking
+- **Auto-Location** - IP-based location detection
 
 ### NatLangChain Publishing
 
-- **Natural Language Blockchain** - Publish your writing to NatLangChain's prose-first ledger
-- **Intent-Native Protocol** - Human-readable smart contracts preserve your authorial intent
-- **Multiple Content Types** - Support for journal entries, news articles, and serialized fiction with semantic blockchain storage
-- **Monetization Options** - Free, subscription, pay-per-entry, or tip jar models for cognitive work valuation
-- **AI Editing** - Polish, clarify, expand, or summarize content before publishing to the intent preservation blockchain
-- **Intent Detection** - AI-assisted intent suggestions for your entries using linguistic consensus
-- **Validation** - Pre-publish validation with clarity scoring for auditable prose transactions
+- **Blockchain Publishing** - Publish writing to NatLangChain
+- **Multiple Content Types** - Journal entries, articles, serialized fiction
+- **Monetization** - Free, subscription, pay-per-entry, or tip jar
+- **AI Editing** - Polish, clarify, expand, or summarize before publishing
+- **Author Signing** - Ed25519 cryptographic author authentication
 
-### First Run Experience
+### Security
 
-- **Onboarding Wizard** - Guided setup for new users
-- **Theme Selection** - Choose light, dark, or system theme
-- **AI Setup** - Easy Ollama connection verification
-- **Welcome Note** - Helpful tips to get started
+- **OS Keychain** - API keys stored in macOS Keychain / Windows Credential Manager / Linux Secret Service
+- **Settings Integrity** - HMAC-SHA256 tamper detection on settings file
+- **Secret Scanning** - Pre-publish scan for accidentally included credentials
+- **Prompt Safety** - Delimiter-based data/instruction separation in all AI prompts
+- **Content Provenance** - AI-edited content tracked and labeled
+- **Audit Trail** - Tamper-evident logging of AI interactions and publishes
 
 ## Quick Start
 
 ### Prerequisites
 
 - [Ollama](https://ollama.ai) (optional, for AI features)
-- [WeatherAPI.com](https://www.weatherapi.com/signup.aspx) API key (optional, for weather context)
+- [WeatherAPI.com](https://www.weatherapi.com/signup.aspx) API key (optional, for weather)
 
 ### Install Ollama (optional)
 
 ```bash
-# Install Ollama, then pull a model
 ollama pull llama3.2:3b
 ```
 
 ### Run HeLpER
 
-Download the latest release for your platform from the [Releases](https://github.com/kase1111-hash/HeLpER/releases) page.
-
-Or build from source:
+Download from the [Releases](https://github.com/kase1111-hash/HeLpER/releases) page, or build from source:
 
 ```bash
-# Clone the repository
 git clone https://github.com/kase1111-hash/HeLpER.git
 cd HeLpER
-
-# Install dependencies
 npm install
-
-# Run in development mode
-npm run tauri dev
-
-# Build for production
-npm run tauri build
+npm run tauri dev      # development
+npm run tauri build    # production
 ```
 
 ### Windows Quick Start
 
-Windows users can use the provided batch scripts:
-
 ```batch
-:: First-time setup - installs all dependencies
-assemble-windows.bat
-
-:: Start the development server
-startup-windows.bat
-
-:: Build for production
-build-windows.bat
+assemble-windows.bat   :: first-time setup
+startup-windows.bat    :: start dev server
+build-windows.bat      :: build for production
 ```
-
-These scripts include:
-- Prerequisite checks (Node.js, Rust)
-- Automatic retry logic for network operations
-- Detailed logging to `logs/` directory
 
 ## Keyboard Shortcuts
 
@@ -121,67 +99,43 @@ These scripts include:
 - **AI**: [Ollama](https://ollama.ai) REST API
 - **Weather**: [WeatherAPI.com](https://www.weatherapi.com)
 - **Publishing**: NatLangChain blockchain integration
+- **Security**: keyring, ed25519-dalek, hmac-sha2
 
 ## Project Structure
 
 ```
 HeLpER/
 ├── src/                    # Svelte frontend
-│   ├── components/         # UI components
-│   │   ├── App.svelte              # Main application
-│   │   ├── Calendar.svelte         # Date picker
-│   │   ├── ChatPanel.svelte        # AI chat interface
-│   │   ├── DateNav.svelte          # Date navigation
-│   │   ├── FirstRunWizard.svelte   # Onboarding wizard
-│   │   ├── JournalContext.svelte   # Weather/time context display
-│   │   ├── NoteEditor.svelte       # Note editing
-│   │   ├── NotesList.svelte        # Notes list view
-│   │   ├── PublishPanel.svelte     # NatLangChain publishing
-│   │   ├── SettingsPanel.svelte    # Settings UI
-│   │   ├── StatusBar.svelte        # Connection status
-│   │   ├── TitleBar.svelte         # Window title bar
-│   │   ├── ToastContainer.svelte   # Notifications
-│   │   └── WeatherBadge.svelte     # Weather indicator
-│   ├── lib/
-│   │   ├── services/       # API services
-│   │   │   ├── export.ts           # Export/backup functionality
-│   │   │   ├── natlangchain.ts     # NatLangChain integration
-│   │   │   ├── stt.ts              # Speech-to-text
-│   │   │   ├── tauri.ts            # Tauri IPC commands
-│   │   │   └── weather.ts          # Weather utilities
-│   │   ├── stores/         # Svelte stores
-│   │   │   ├── chat.ts             # AI chat state
-│   │   │   ├── notes.ts            # Notes management
-│   │   │   ├── settings.ts         # User settings
-│   │   │   ├── stt.ts              # Speech-to-text state
-│   │   │   ├── ui.ts               # UI state
-│   │   │   └── weather.ts          # Weather state
-│   │   ├── utils/          # Helper functions
-│   │   ├── constants.ts    # App constants
-│   │   └── types.ts        # TypeScript types
-│   └── App.svelte          # Main app component
+│   ├── components/         # UI components (13 Svelte files)
+│   └── lib/
+│       ├── services/       # API services (tauri, weather, natlangchain, export, stt)
+│       ├── stores/         # Svelte stores (notes, settings, chat, ui, weather, stt)
+│       ├── utils/          # Helpers (date, note, secretScanner)
+│       ├── constants.ts    # App constants
+│       └── types.ts        # TypeScript types
 ├── src-tauri/              # Rust backend
 │   └── src/
-│       ├── commands.rs     # Tauri commands
-│       ├── database.rs     # SQLite operations
-│       ├── natlangchain.rs # NatLangChain API client
+│       ├── commands.rs     # Tauri IPC command handlers
+│       ├── database.rs     # SQLite operations + migrations
 │       ├── ollama.rs       # Ollama API client
-│       ├── tray.rs         # System tray
-│       └── weather.rs      # Weather API client
+│       ├── natlangchain.rs # NatLangChain API client
+│       ├── weather.rs      # Weather API client
+│       ├── integrity.rs    # HMAC settings integrity
+│       ├── author_identity.rs # Ed25519 author signing
+│       └── tray.rs         # System tray
 ├── tests/                  # Unit tests
 ├── e2e/                    # End-to-end tests
-├── docs/                   # Documentation
-├── assemble-windows.bat    # Windows setup script
-├── startup-windows.bat     # Windows dev server script
-└── build-windows.bat       # Windows build script
+└── docs/                   # Documentation
 ```
 
 ## Documentation
 
-- [User Guide](docs/USER_GUIDE.md) - Complete guide to using HeLpER
-- [Contributing](CONTRIBUTING.md) - Guidelines for contributors
-- [Changelog](CHANGELOG.md) - Version history and release notes
-- [Security](SECURITY.md) - Security policy and vulnerability reporting
+- [User Guide](docs/USER_GUIDE.md) - Complete usage guide
+- [Contributing](CONTRIBUTING.md) - Contributor guidelines
+- [Changelog](CHANGELOG.md) - Version history
+- [Security](SECURITY.md) - Security policy and architecture
+- [Audit Report](AUDIT_REPORT.md) - Quality, security, and product assessments
+- [Roadmap](ROADMAP.md) - Development plans
 
 ## System Requirements
 
@@ -204,78 +158,50 @@ All data is stored locally:
 ## Development
 
 ```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run end-to-end tests
-npm run test:e2e
-
-# Type check
-npm run check
-
-# Lint code
-npm run lint
-
-# Format code
-npm run format
-
-# Development server
-npm run tauri dev
+npm test              # run tests
+npm run test:coverage # coverage report
+npm run test:e2e      # end-to-end tests
+npm run check         # type check
+npm run lint          # lint
+npm run format        # format
+npm run tauri dev     # dev server
 ```
-
-## Configuration
-
-### Settings Categories
-
-| Category | Description |
-|----------|-------------|
-| **Appearance** | Theme selection (light, dark, system) |
-| **AI Assistant** | Ollama URL and model configuration |
-| **Journal Context** | Weather API key, location, temperature unit |
-| **Behavior** | Minimize to tray, start minimized, always on top |
-| **NatLangChain** | Publishing settings, author info, monetization defaults |
-| **Data** | Export and backup options |
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details on the development process, coding standards, and how to submit pull requests.
+Contributions welcome! See [Contributing Guide](CONTRIBUTING.md).
 
 ## License
 
-MIT License - see [LICENSE](LICENSE.md) for details.
+MIT License - see [LICENSE](LICENSE.md).
 
 ---
 
 ## Connected Repositories
 
-HeLpER is part of a larger ecosystem of tools for digital sovereignty, human-AI collaboration, and the authenticity economy.
-
 ### NatLangChain Ecosystem
 
-- **[NatLangChain](https://github.com/kase1111-hash/NatLangChain)** - Prose-first, intent-native blockchain protocol for recording human intent in natural language
-- **[IntentLog](https://github.com/kase1111-hash/IntentLog)** - Git for human reasoning; tracks "why" changes happen via prose commits
-- **[RRA-Module](https://github.com/kase1111-hash/RRA-Module)** - Revenant Repo Agent for abandoned repository monetization
-- **[mediator-node](https://github.com/kase1111-hash/mediator-node)** - LLM mediation layer for matching, negotiation, and closure proposals
-- **[ILR-module](https://github.com/kase1111-hash/ILR-module)** - IP & Licensing Reconciliation for dispute resolution
-- **[Finite-Intent-Executor](https://github.com/kase1111-hash/Finite-Intent-Executor)** - Posthumous execution of predefined intent via smart contracts
+- **[NatLangChain](https://github.com/kase1111-hash/NatLangChain)** - Prose-first blockchain protocol
+- **[IntentLog](https://github.com/kase1111-hash/IntentLog)** - Git for human reasoning
+- **[RRA-Module](https://github.com/kase1111-hash/RRA-Module)** - Abandoned repository monetization
+- **[mediator-node](https://github.com/kase1111-hash/mediator-node)** - LLM mediation layer
+- **[ILR-module](https://github.com/kase1111-hash/ILR-module)** - IP & Licensing Reconciliation
+- **[Finite-Intent-Executor](https://github.com/kase1111-hash/Finite-Intent-Executor)** - Posthumous intent execution
 
 ### Agent-OS Ecosystem
 
-- **[Agent-OS](https://github.com/kase1111-hash/Agent-OS)** - Natural-language native operating system for AI agents
-- **[synth-mind](https://github.com/kase1111-hash/synth-mind)** - NLOS-based agent with psychological modules for emergent continuity and empathy
-- **[memory-vault](https://github.com/kase1111-hash/memory-vault)** - Secure, offline-capable, owner-sovereign storage for cognitive artifacts
-- **[value-ledger](https://github.com/kase1111-hash/value-ledger)** - Economic accounting layer for cognitive work
-- **[learning-contracts](https://github.com/kase1111-hash/learning-contracts)** - Safety protocols for AI learning and data management
+- **[Agent-OS](https://github.com/kase1111-hash/Agent-OS)** - Natural-language native OS for AI agents
+- **[synth-mind](https://github.com/kase1111-hash/synth-mind)** - Psychological AI agent modules
+- **[memory-vault](https://github.com/kase1111-hash/memory-vault)** - Sovereign cognitive artifact storage
+- **[value-ledger](https://github.com/kase1111-hash/value-ledger)** - Economic accounting for cognitive work
+- **[learning-contracts](https://github.com/kase1111-hash/learning-contracts)** - AI learning safety protocols
 
 ### Game Development
 
-- **[Shredsquatch](https://github.com/kase1111-hash/Shredsquatch)** - 3D first-person snowboarding infinite runner (SkiFree homage)
-- **[Midnight-pulse](https://github.com/kase1111-hash/Midnight-pulse)** - Procedurally generated night drive
-- **[Long-Home](https://github.com/kase1111-hash/Long-Home)** - Atmospheric narrative game built with Godot
+- **[Shredsquatch](https://github.com/kase1111-hash/Shredsquatch)** - 3D snowboarding infinite runner
+- **[Midnight-pulse](https://github.com/kase1111-hash/Midnight-pulse)** - Procedural night drive
+- **[Long-Home](https://github.com/kase1111-hash/Long-Home)** - Atmospheric narrative game
 
 ---
 
-*HeLpER v0.1.0-alpha - Built with Tauri, Svelte, and Ollama for the authenticity economy*
+*HeLpER v0.1.0-alpha - Built with Tauri, Svelte, and Ollama*

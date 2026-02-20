@@ -1,6 +1,6 @@
 # HeLpER User Guide
 
-**HeLpER** (Helpful Lightweight Personal Everyday Recorder) is a minimalist daily notes app with an AI assistant, weather-aware journal context, and blockchain publishing capabilities.
+**HeLpER** (Helpful Lightweight Personal Everyday Recorder) is a privacy-first daily notes app with local AI assistance, weather-aware journal context, and optional blockchain publishing.
 
 ---
 
@@ -11,11 +11,12 @@
 3. [AI Assistant](#ai-assistant)
 4. [Journal Context](#journal-context)
 5. [NatLangChain Publishing](#natlangchain-publishing)
-6. [Keyboard Shortcuts](#keyboard-shortcuts)
-7. [Settings](#settings)
-8. [Export & Backup](#export--backup)
-9. [Windows Scripts](#windows-scripts)
-10. [Troubleshooting](#troubleshooting)
+6. [Security Features](#security-features)
+7. [Keyboard Shortcuts](#keyboard-shortcuts)
+8. [Settings](#settings)
+9. [Export & Backup](#export--backup)
+10. [Windows Scripts](#windows-scripts)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -32,17 +33,14 @@
 
 ### First Launch
 
-When you first launch HeLpER, the onboarding wizard will guide you through:
+When you first launch HeLpER, the onboarding wizard guides you through:
 
-1. **Welcome Screen** - Introduction to HeLpER's key features
-2. **Theme Selection** - Choose between Light, Dark, or System theme
-3. **AI Setup** - Connect to Ollama for AI-powered features (optional)
-4. **Ready** - Keyboard shortcuts reference and a welcome note
+1. **Welcome Screen** - Introduction to key features
+2. **Theme Selection** - Light, Dark, or System theme
+3. **AI Setup** - Connect to Ollama (optional)
+4. **Ready** - Keyboard shortcuts and a welcome note
 
-After onboarding:
-- The app opens to today's date
-- A welcome note is created with helpful tips
-- Start typing immediately - notes save automatically
+After onboarding, the app opens to today's date with a welcome note. Start typing immediately - notes save automatically.
 
 ---
 
@@ -50,66 +48,60 @@ After onboarding:
 
 ### Creating Notes
 
-- Click the **+ New Note** button at the bottom of the notes list
+- Click **+ New Note** at the bottom of the notes list
 - Or press `Ctrl+N` (Windows/Linux) or `Cmd+N` (macOS)
 
 ### Navigating Dates
 
-- Use the **< >** arrows in the date bar to move between days
+- Use **< >** arrows in the date bar to move between days
 - Click the **calendar icon** to jump to a specific date
-- Notes are organized by date automatically
 
 ### Editing Notes
 
-- Click any note in the list to select it
-- The editor shows your note content
-- Changes save automatically as you type (auto-save delay configurable)
+- Click any note to select it
+- Changes save automatically as you type
 - Character count displays in the corner (max 5,000)
 
 ### Searching Notes
 
 - Use the search box at the top of the notes list
 - Press `Ctrl+F` to focus the search box
-- Search filters notes for the current day
-- Press `Escape` to clear the search
+- Press `Escape` to clear
 
 ### Deleting Notes
 
-- Hover over a note to reveal the delete button (trash icon)
-- Click and confirm to delete
+- Hover over a note to reveal the delete button
 - Deleted notes are soft-deleted and can be recovered from backups
 
 ---
 
 ## AI Assistant
 
-The AI assistant helps you format, expand, and improve your notes using a local Ollama model.
+The AI assistant helps format, expand, and improve your notes using a local Ollama model.
 
-### Requirements
+### Setup
 
 1. Install [Ollama](https://ollama.ai)
 2. Pull a model: `ollama pull llama3.2:3b`
-3. Start Ollama (it runs in the background)
+3. Start Ollama (runs in background)
 
 ### Using the Chat
 
 1. The chat panel is at the bottom of the app
-2. Type a message and press `Enter` or click Send
-3. The AI can see your current note as context
+2. Type a message and press `Enter`
+3. The AI can see your current note as context (with delimiter-based safety separation)
 
-### Example Prompts
+### Quick Actions
 
-| Task | Example Prompt |
-|------|----------------|
-| Format notes | "Format this into bullet points" |
-| Expand content | "Expand this into a detailed paragraph" |
-| Summarize | "Summarize this note in 3 points" |
-| Fix grammar | "Fix any grammar errors" |
-| Professional tone | "Rewrite this more professionally" |
+| Action | What it does |
+|--------|-------------|
+| Format | Structure with bullet points |
+| Expand | Develop into detailed paragraphs |
+| Summarize | Condense to key points |
+| Fix Grammar | Correct spelling and grammar |
+| Make Professional | Rewrite in professional tone |
 
 ### Connection Status
-
-The status bar at the bottom shows Ollama's connection state:
 
 | Status | Meaning |
 |--------|---------|
@@ -117,213 +109,113 @@ The status bar at the bottom shows Ollama's connection state:
 | Yellow dot + "Connecting..." | Attempting to connect |
 | Gray dot + "Disconnected" | Ollama not running |
 
-Click **Retry** to reconnect if disconnected.
-
 ---
 
 ## Journal Context
 
-HeLpER can display contextual information for your journal entries, including weather, time of day, and moon phases.
-
 ### Enabling Weather
 
 1. Open Settings (`Ctrl+,`)
-2. Find the **Journal Context** section
-3. Toggle **Show weather & context in journal**
-4. Enter your WeatherAPI.com API key (get a free key [here](https://www.weatherapi.com/signup.aspx))
-5. Enter your location or click **Detect** for auto-detection
+2. Find **Journal Context**
+3. Toggle **Show weather & context**
+4. Enter your WeatherAPI.com API key (stored securely in OS keychain)
+5. Enter location or click **Detect**
 
 ### Weather Information
 
-When enabled, the Journal Context panel shows:
-
-| Field | Description |
-|-------|-------------|
-| **Temperature** | Current temperature in your preferred unit |
-| **Feels Like** | Apparent temperature |
-| **Condition** | Weather description (Clear, Cloudy, Rain, etc.) |
-| **Humidity** | Current humidity percentage |
-| **Wind** | Wind speed and direction |
-| **UV Index** | Current UV radiation level |
-| **Location** | Your configured or detected location |
+Temperature, feels like, condition, humidity, wind, UV index, and location.
 
 ### Time Context
 
-The Journal Context also displays:
-
-- **Time of Day** - Morning, Afternoon, Evening, or Night
-- **Day of Week** - Current day name
-- **Moon Phase** - Current lunar phase (New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent)
-
-### Weather Icons
-
-| Icon | Condition |
-|------|-----------|
-| ☀️ | Clear (day) |
-| 🌙 | Clear (night) |
-| ⛅ | Partly Cloudy |
-| ☁️ | Cloudy/Overcast |
-| 🌧️ | Rain |
-| 🌦️ | Drizzle |
-| ❄️ | Snow |
-| ⛈️ | Thunderstorm |
-| 🌫️ | Fog/Mist |
+- **Time of Day** - Morning, Afternoon, Evening, Night
+- **Day of Week** - Current day
+- **Moon Phase** - Current lunar phase
 
 ---
 
 ## NatLangChain Publishing
 
-HeLpER integrates with NatLangChain, a blockchain-based publishing platform for monetizing your writing.
-
-### Enabling NatLangChain
+### Enabling
 
 1. Open Settings (`Ctrl+,`)
-2. Find the **NatLangChain Publishing** section
+2. Find **NatLangChain Publishing**
 3. Toggle **Enable blockchain publishing**
-4. Enter the NatLangChain API URL
-5. Set your Author Name and Author ID
-6. Configure default monetization and visibility settings
+4. Enter API URL, Author Name, and Author ID
 
 ### Content Types
 
-NatLangChain supports three content types:
+| Type | Description |
+|------|-------------|
+| **Journal Entry** | Personal entries and reflections |
+| **News Article** | Journalism, reviews, tutorials |
+| **Story Chapter** | Serialized fiction |
 
-| Type | Icon | Description |
-|------|------|-------------|
-| **Journal Entry** | 📝 | Personal journal entries and reflections |
-| **News Article** | 📰 | Journalism, news, reviews, and tutorials |
-| **Story Chapter** | 📖 | Serialized fiction and story chapters |
+### Publishing Flow
 
-### Publishing a Note
+1. Select a note to publish
+2. **Edit & Prepare** - Choose content type, add title, edit content, use AI editing tools
+3. **Publish on Chain** - Set monetization, visibility, validate, and publish
 
-1. Select a note you want to publish
-2. Open the Publish Panel
-3. Choose **Edit & Prepare** tab to refine your content:
-   - Select content type (Journal, Article, or Story)
-   - Add a title
-   - Edit the content
-   - Use AI editing tools (Polish, Clarify, Expand, Summarize)
-   - Set intent and tags
-   - For stories: Add series title, chapter number, genre
-   - For articles: Add headline, category, byline, sources
-4. Switch to **Publish on Chain** tab:
-   - Set monetization model
-   - Choose visibility
-   - Preview your entry
-   - Click **Validate** to check for issues
-   - Click **Publish** to submit to the blockchain
-
-### Monetization Models
-
-| Model | Description |
-|-------|-------------|
-| **Free** | Anyone can read |
-| **Subscription** | Only your subscribers can read |
-| **Pay Per Entry** | Readers pay a set price to access |
-| **Tip Jar** | Free to read with optional tips |
-
-### Visibility Options
-
-| Option | Description |
-|--------|-------------|
-| **Public** | Visible to everyone |
-| **Subscribers Only** | Only visible to your subscribers |
-| **Private (Draft)** | Hidden, saved as draft |
+Content is automatically scanned for secrets before publishing and signed with your Ed25519 author key.
 
 ### AI Editing Tools
 
-Before publishing, use AI to improve your content:
-
 | Tool | Description |
 |------|-------------|
-| **Polish** | Improve prose and make content publication-ready |
-| **Clarify** | Improve clarity and make intent clear |
-| **Expand** | Add more detail and context |
-| **Summarize** | Create a concise version |
+| **Polish** | Improve prose for publication |
+| **Clarify** | Make intent clear |
+| **Expand** | Add detail and context |
+| **Summarize** | Create concise version |
 
-Each tool adapts its behavior based on the selected content type (journal, article, or story).
+AI-edited content is marked with an "AI-Assisted" provenance badge.
 
-### Story Chapters
+---
 
-For serialized fiction:
+## Security Features
 
-- **Series Title** - Name of your story series
-- **Genre** - Fiction, Fantasy, Sci-Fi, Mystery, Romance, etc.
-- **Chapter Number** - Automatically detected from content
-- **Total Chapters** - Set if known, or mark as "Ongoing"
-- **Synopsis** - Brief story description (for first chapter only)
+HeLpER includes several security measures to protect your data:
 
-### News Articles
+### Credential Storage
+Your API keys are stored in your operating system's secure keychain (macOS Keychain, Windows Credential Manager, or Linux Secret Service) rather than in plaintext files.
 
-For journalism and articles:
+### Secret Scanning
+Before publishing to NatLangChain, your content is automatically scanned for accidentally included secrets like API keys, passwords, SSH keys, and tokens. If secrets are detected, publishing is blocked with a warning.
 
-- **Category** - News, Opinion, Analysis, Feature, Review, Tutorial, Interview
-- **Subcategory** - More specific topic area
-- **Byline** - Additional author information
-- **Dateline** - Location where news occurred
-- **Sources** - Attribution sources (comma-separated)
-- **Flags** - Breaking News, Opinion Piece, Analysis
+### Settings Integrity
+Your settings file is protected with HMAC-SHA256 verification. If the settings file is tampered with outside the app, you'll be warned on next launch.
+
+### Author Signing
+NatLangChain entries are cryptographically signed with an Ed25519 keypair stored in your OS keychain, providing verifiable author identity.
+
+### Audit Trail
+All AI interactions, publishes, and settings changes are logged to a tamper-evident audit trail with hash chaining.
 
 ---
 
 ## Keyboard Shortcuts
-
-### Global Shortcuts
 
 | Action | Windows/Linux | macOS |
 |--------|---------------|-------|
 | New Note | `Ctrl+N` | `Cmd+N` |
 | Search Notes | `Ctrl+F` | `Cmd+F` |
 | Open Settings | `Ctrl+,` | `Cmd+,` |
-| Close Panel/Clear | `Escape` | `Escape` |
-
-### Chat Shortcuts
-
-| Action | Windows/Linux | macOS |
-|--------|---------------|-------|
-| Send Message | `Enter` | `Enter` |
+| Close Panel | `Escape` | `Escape` |
+| Send Chat | `Enter` | `Enter` |
 
 ---
 
 ## Settings
 
-Open Settings with `Ctrl+,` or click the gear icon in the status bar.
+Open Settings with `Ctrl+,` or click the gear icon.
 
-### Appearance
-
-- **Theme**: Choose Light, Dark, or System (follows OS preference)
-
-### AI Assistant
-
-- **Ollama URL**: API endpoint (default: `http://localhost:11434`)
-- **Model**: Which Ollama model to use (default: `llama3.2:3b`)
-
-### Journal Context
-
-- **Enable Weather**: Toggle weather and context display
-- **Weather API Key**: Your WeatherAPI.com API key
-- **Location**: City name, coordinates, or auto-detected
-- **Temperature Unit**: Celsius or Fahrenheit
-
-### Behavior
-
-- **Minimize to tray on close**: Keep app running in system tray when closing
-- **Start minimized**: Launch directly to system tray
-- **Always on top**: Keep window above other applications
-
-### NatLangChain Publishing
-
-- **Enable blockchain publishing**: Toggle NatLangChain integration
-- **API URL**: NatLangChain API endpoint
-- **Author Name**: Your display name
-- **Author ID**: Unique identifier for earnings
-- **Default Monetization**: Free, Subscription, Pay Per Entry, or Tip Jar
-- **Validate before publishing**: Auto-validate entries before publishing
-
-### Data
-
-- **Export Notes**: Save notes as Markdown or JSON files
-- **Create Backup**: Export all data with metadata
+| Category | Options |
+|----------|---------|
+| **Appearance** | Theme (Light, Dark, System) |
+| **AI Assistant** | Ollama URL, model selection |
+| **Journal Context** | Weather API key (stored in keychain), location, temperature unit |
+| **Behavior** | Minimize to tray, start minimized, always on top |
+| **NatLangChain** | Enable publishing, API URL, author info, monetization defaults |
+| **Data** | Export and backup options |
 
 ---
 
@@ -332,163 +224,61 @@ Open Settings with `Ctrl+,` or click the gear icon in the status bar.
 ### Exporting Notes
 
 1. Open Settings (`Ctrl+,`)
-2. Scroll to the **Data** section
-3. Choose export format:
-   - **Markdown**: Human-readable, one file with all notes
-   - **JSON**: Structured data, good for importing elsewhere
+2. Scroll to **Data**
+3. Choose format: **Markdown** (human-readable) or **JSON** (structured)
 
 ### Creating Backups
 
 1. Open Settings
 2. Click **Create Backup**
-3. Choose a location to save the backup file
-4. The backup includes all notes with timestamps
-
-### Backup File Format
-
-```json
-{
-  "version": "1.0",
-  "exportedAt": "2025-12-31T10:00:00.000Z",
-  "notes": [
-    {
-      "id": "...",
-      "date": "2025-12-31",
-      "title": "My Note Title",
-      "content": "Note content...",
-      "createdAt": "...",
-      "updatedAt": "..."
-    }
-  ]
-}
-```
+3. Choose save location
 
 ---
 
 ## Windows Scripts
 
-HeLpER provides batch scripts for Windows users to simplify development setup and execution.
-
-### Available Scripts
-
 | Script | Purpose |
 |--------|---------|
-| `assemble-windows.bat` | Install all dependencies (npm, Tauri CLI, Rust crates) |
-| `startup-windows.bat` | Start the development server |
-| `build-windows.bat` | Build the application for production |
+| `assemble-windows.bat` | Install all dependencies |
+| `startup-windows.bat` | Start development server |
+| `build-windows.bat` | Build for production |
 
-### Using the Scripts
-
-**First-time setup:**
-```batch
-:: Run from the HeLpER directory
-assemble-windows.bat
-```
-
-This script will:
-1. Check for prerequisites (Node.js, Rust, PowerShell)
-2. Install npm dependencies
-3. Install Tauri CLI
-4. Fetch Rust dependencies
-
-**Starting development:**
-```batch
-startup-windows.bat
-```
-
-This script will:
-1. Verify prerequisites
-2. Auto-run assembly if dependencies are missing
-3. Start the Tauri development server
-
-**Building for production:**
-```batch
-build-windows.bat
-```
-
-### Script Features
-
-- **Error Codes**: Structured error codes (10-99) for different failure scenarios
-- **Retry Logic**: Automatic retries (up to 3 attempts) for network operations
-- **Logging**: Timestamped logs saved to `logs/` directory
-### Logs
-
-Scripts create detailed logs in the `logs/` directory:
-- `assembly-YYYYMMDD_HHMMSS.log` - Assembly script logs
-- `startup-YYYYMMDD_HHMMSS.log` - Startup script logs
+Scripts include prerequisite checks, retry logic, and logging to `logs/`.
 
 ---
 
 ## Troubleshooting
 
-### AI Assistant Won't Connect
-
-1. **Check Ollama is running**:
-   ```bash
-   ollama list
-   ```
-   If this fails, Ollama isn't running. Start it or install from [ollama.ai](https://ollama.ai).
-
-2. **Check the model is installed**:
-   ```bash
-   ollama pull llama3.2:3b
-   ```
-
-3. **Verify the URL in Settings**:
-   Default is `http://localhost:11434`. Change if you're running Ollama elsewhere.
-
-4. **Click Retry** in the status bar to reconnect.
-
-### "Model not found" Error
-
-The configured model isn't installed. Run:
-```bash
-ollama pull <model-name>
-```
-
-Replace `<model-name>` with the model shown in Settings (e.g., `llama3.2:3b`).
+### AI Won't Connect
+1. Check Ollama is running: `ollama list`
+2. Verify model installed: `ollama pull llama3.2:3b`
+3. Check URL in Settings (default: `http://localhost:11434`)
+4. Click Retry in status bar
 
 ### Weather Not Loading
+1. Check API key in Settings (stored in OS keychain)
+2. Verify location is set
+3. Click Refresh in Journal Context panel
 
-1. **Check API Key**: Ensure you have a valid WeatherAPI.com API key in Settings
-2. **Verify Location**: Make sure your location is set correctly
-3. **Click Refresh**: Use the refresh button in the Journal Context panel
-4. **Try Auto-Detect**: Click "Detect" to automatically find your location
-
-### NatLangChain Connection Issues
-
-1. **Test Connection**: Use the "Test" button in Settings to verify connectivity
-2. **Check API URL**: Ensure the NatLangChain API URL is correct
-3. **Verify Network**: Make sure you have internet access
+### NatLangChain Issues
+1. Use "Test" button in Settings
+2. Verify API URL is correct
+3. Check network access
 
 ### Notes Not Saving
-
-Notes auto-save after you stop typing. If notes aren't persisting:
-
-1. Check disk space
-2. Restart the app
-3. Check the app's data folder for corruption
+Notes auto-save after you stop typing. If not persisting, check disk space and restart the app.
 
 ### App Won't Start
-
-1. Try resetting settings by deleting the config file:
-   - **Windows**: `%APPDATA%\HeLpER\settings.json`
-   - **macOS**: `~/Library/Application Support/HeLpER/settings.json`
-   - **Linux**: `~/.local/share/helper/settings.json`
-
-2. Reinstall the application
-
-### System Tray Icon Missing
-
-On Linux, ensure your desktop environment supports system tray icons. Some require extensions:
-- **GNOME**: Install "AppIndicator" extension
-- **KDE**: Works out of the box
+Reset settings by deleting the config file:
+- **Windows**: `%APPDATA%\HeLpER\settings.json`
+- **macOS**: `~/Library/Application Support/HeLpER/settings.json`
+- **Linux**: `~/.local/share/helper/settings.json`
 
 ---
 
 ## Data Storage
 
-HeLpER stores all data locally on your device:
+All data is stored locally:
 
 | OS | Location |
 |----|----------|
@@ -496,15 +286,8 @@ HeLpER stores all data locally on your device:
 | macOS | `~/Library/Application Support/HeLpER/` |
 | Linux | `~/.local/share/helper/` |
 
-Your notes never leave your device unless you explicitly export them or publish to NatLangChain.
+Your notes never leave your device unless you explicitly export or publish them.
 
 ---
 
-## Getting Help
-
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/kase1111-hash/HeLpER/issues)
-- **Discussions**: Ask questions on GitHub Discussions
-
----
-
-*HeLpER v0.1.0-alpha - Your helpful everyday note companion*
+*HeLpER v0.1.0-alpha*
