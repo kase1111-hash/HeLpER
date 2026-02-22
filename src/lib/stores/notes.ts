@@ -2,6 +2,7 @@ import { writable, derived, get } from 'svelte/store';
 import type { Note } from '../types';
 import { formatDateISO, getTimestamp } from '../utils/date';
 import { fetchNotesForDate, saveNote, updateNoteInDb, deleteNoteFromDb } from '../services/tauri';
+import { showToast } from './ui';
 
 // Current date being viewed
 export const currentDate = writable<string>(formatDateISO(new Date()));
@@ -65,6 +66,7 @@ export async function addNote(note: Note): Promise<void> {
   const saved = await saveNote(note);
   if (!saved) {
     console.error('Failed to save note to database');
+    showToast({ type: 'error', message: 'Failed to save note. Change has been reverted.' });
     // Revert optimistic update
     notesMap.update((map) => {
       map.set(note.date, previousNotes);
@@ -93,6 +95,7 @@ export async function updateNote(updatedNote: Note): Promise<void> {
   const saved = await updateNoteInDb(updatedNote);
   if (!saved) {
     console.error('Failed to update note in database');
+    showToast({ type: 'error', message: 'Failed to update note. Change has been reverted.' });
     // Revert optimistic update
     if (previousNote) {
       notesMap.update((map) => {
@@ -123,6 +126,7 @@ export async function deleteNote(noteId: string, date: string): Promise<void> {
   const deleted = await deleteNoteFromDb(noteId, getTimestamp());
   if (!deleted) {
     console.error('Failed to delete note from database');
+    showToast({ type: 'error', message: 'Failed to delete note. Change has been reverted.' });
     // Revert optimistic update
     notesMap.update((map) => {
       map.set(date, previousNotes);

@@ -9,8 +9,11 @@ pub struct DbPool(pub Arc<Mutex<Option<SqlitePool>>>);
 
 pub type SqlitePool = sqlx::SqlitePool;
 
-/// Initialize the database connection and create tables
-pub async fn initialize(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+/// Initialize the database and fill the pre-registered `DbPool` state.
+///
+/// `DbPool` must already be managed (with `None` inside) before this is called.
+/// This avoids the race where commands execute before `manage()` registers the state.
+pub async fn initialize_into(app_handle: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let app_dir = app_handle
         .path()
         .app_data_dir()
@@ -31,8 +34,10 @@ pub async fn initialize(app_handle: &AppHandle) -> Result<(), Box<dyn std::error
     // Run migrations / create tables
     create_tables(&pool).await?;
 
-    // Store pool in app state
-    app_handle.manage(DbPool(Arc::new(Mutex::new(Some(pool)))));
+    // Fill the pre-registered DbPool with the live connection
+    let db_state = app_handle.state::<DbPool>();
+    let mut guard = db_state.0.lock().await;
+    *guard = Some(pool);
 
     Ok(())
 }

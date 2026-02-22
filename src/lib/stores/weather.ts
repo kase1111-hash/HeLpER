@@ -2,6 +2,7 @@ import { writable, derived, get } from 'svelte/store';
 import type { WeatherData, JournalContext } from '../types';
 import { fetchWeather, fetchJournalContext, detectLocation } from '../services/weather';
 import { settings } from './settings';
+import { showToast } from './ui';
 
 // Weather data store
 export const currentWeather = writable<WeatherData | null>(null);
@@ -79,9 +80,11 @@ export async function refreshWeather(): Promise<void> {
       lastFetchTime = now;
     } else {
       weatherError.set('Failed to fetch weather data');
+      showToast({ type: 'error', message: 'Failed to fetch weather data.' });
     }
   } catch (error) {
     weatherError.set(String(error));
+    showToast({ type: 'error', message: `Weather error: ${String(error)}` });
   } finally {
     weatherLoading.set(false);
   }

@@ -256,10 +256,13 @@ export interface NatLangChainPublishResult {
 }
 
 export interface NatLangChainStats {
-  totalEntries: number; // Provided by NatLangChain
-  totalEarnings: number; // Not tracked by NatLangChain - always 0
-  subscribers: number; // Not tracked by NatLangChain - always 0
-  views: number; // Not tracked by NatLangChain - always 0
+  totalEntries: number;
+}
+
+export interface AuditChainVerification {
+  valid: boolean;
+  totalEntries: number;
+  firstBrokenEntry: number | null;
 }
 
 export interface NatLangChainSettings {

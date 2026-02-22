@@ -16,6 +16,7 @@ import {
   verifySettingsHmac,
   logAuditEvent,
 } from '../services/tauri';
+import { showToast } from './ui';
 
 const SETTINGS_STORE_PATH = 'settings.json';
 const SETTINGS_KEY = 'userSettings';
@@ -52,6 +53,7 @@ export async function initializeSettings(): Promise<void> {
         const isValid = await verifySettingsHmac(settingsJson, storedHmac);
         if (!isValid) {
           console.warn('Settings integrity check failed - settings may have been tampered with');
+          showToast({ type: 'warning', message: 'Settings integrity check failed — settings may have been tampered with.' });
         }
       }
 
@@ -144,8 +146,52 @@ export function initializeTheme(): void {
   });
 }
 
+function isValidUrl(value: string): boolean {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Validate settings before persisting. Returns an error message or null if valid.
+function validateSettings(partial: Partial<Settings>): string | null {
+  if (partial.ai) {
+    if (partial.ai.ollamaUrl !== undefined && !isValidUrl(partial.ai.ollamaUrl)) {
+      return 'Invalid Ollama URL.';
+    }
+    if (partial.ai.temperature !== undefined && (partial.ai.temperature < 0 || partial.ai.temperature > 2)) {
+      return 'Temperature must be between 0 and 2.';
+    }
+    if (partial.ai.maxTokens !== undefined && (partial.ai.maxTokens < 1 || partial.ai.maxTokens > 10000)) {
+      return 'Max tokens must be between 1 and 10,000.';
+    }
+  }
+  if (partial.app) {
+    if (partial.app.autoSaveDelay !== undefined && (partial.app.autoSaveDelay < 100 || partial.app.autoSaveDelay > 10000)) {
+      return 'Auto-save delay must be between 100 and 10,000 ms.';
+    }
+  }
+  if (partial.natLangChain) {
+    if (partial.natLangChain.apiUrl !== undefined && !isValidUrl(partial.natLangChain.apiUrl)) {
+      return 'Invalid NatLangChain API URL.';
+    }
+    if (partial.natLangChain.defaultPrice !== undefined && partial.natLangChain.defaultPrice < 0) {
+      return 'Default price cannot be negative.';
+    }
+  }
+  return null;
+}
+
 // Update settings and persist
 export function updateSettings(partial: Partial<Settings>): void {
+  const error = validateSettings(partial);
+  if (error) {
+    showToast({ type: 'error', message: error });
+    return;
+  }
+
   settings.update((s) => ({
     ...s,
     ...partial,

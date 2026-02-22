@@ -7,7 +7,9 @@ mod ollama;
 mod tray;
 mod weather;
 
+use std::sync::Arc;
 use tauri::Manager;
+use tokio::sync::Mutex;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -25,10 +27,14 @@ pub fn run() {
             // Initialize system tray
             tray::create_tray(app.handle())?;
 
-            // Initialize database
+            // Register DbPool state synchronously so commands never see missing state.
+            // The pool starts as None and is populated once the async init completes.
+            app.manage(database::DbPool(Arc::new(Mutex::new(None))));
+
+            // Initialize database asynchronously — fills the pool registered above
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                if let Err(e) = database::initialize(&app_handle).await {
+                if let Err(e) = database::initialize_into(&app_handle).await {
                     eprintln!("Failed to initialize database: {}", e);
                 }
             });
@@ -52,6 +58,7 @@ pub fn run() {
             commands::nlc_check_connection,
             commands::log_audit_event,
             commands::get_audit_log,
+            commands::verify_audit_chain,
             commands::store_secret,
             commands::get_secret,
             commands::delete_secret,

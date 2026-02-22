@@ -89,9 +89,6 @@ pub struct PublishResult {
 #[serde(rename_all = "camelCase")]
 pub struct ChainStats {
     pub total_entries: u64,
-    pub total_earnings: f64,
-    pub subscribers: u64,
-    pub views: u64,
 }
 
 // Request struct for NatLangChain API (minimal required fields)
@@ -386,12 +383,8 @@ pub async fn get_author_stats(
         .map_err(|e| format!("Stats request failed: {}", e))?;
 
     if !response.status().is_success() {
-        // Return empty stats if not found
         return Ok(ChainStats {
             total_entries: 0,
-            total_earnings: 0.0,
-            subscribers: 0,
-            views: 0,
         });
     }
 
@@ -400,12 +393,8 @@ pub async fn get_author_stats(
         .await
         .map_err(|e| format!("Failed to parse author entries response: {}", e))?;
 
-    // NatLangChain only provides entry count - other fields are placeholders
     Ok(ChainStats {
         total_entries: api_response.count.unwrap_or(0),
-        total_earnings: 0.0, // Not tracked by NatLangChain
-        subscribers: 0,      // Not tracked by NatLangChain
-        views: 0,            // Not tracked by NatLangChain
     })
 }
 
