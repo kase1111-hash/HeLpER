@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import type { Note, ChatMessage, OllamaStatus } from '../types';
+import type { Note, ChatMessage, OllamaStatus, AuditChainVerification } from '../types';
 import { addNote, navigateToToday } from '../stores/notes';
 import { toggleSettings } from '../stores/ui';
 import { createNote } from '../utils/note';
@@ -183,6 +183,17 @@ export async function logAuditEvent(eventType: string, eventData: object): Promi
   }
 }
 
+// Audit chain verification
+export async function verifyAuditChain(): Promise<AuditChainVerification | null> {
+  try {
+    return await invoke<AuditChainVerification>('verify_audit_chain');
+  } catch (error) {
+    const tauriError = new TauriServiceError('Failed to verify audit chain', error);
+    console.error(tauriError.message, { originalError: error });
+    return null;
+  }
+}
+
 // Author identity operations
 export async function getAuthorPublicKey(): Promise<string | null> {
   try {
@@ -204,25 +215,35 @@ export async function signEntry(content: string): Promise<string | null> {
   }
 }
 
-// Event listeners for tray actions
-export function setupTrayListeners(): () => void {
-  const unlisteners: (() => void)[] = [];
+// Event listeners for tray actions.
+// Returns an async cleanup function that awaits all listener registrations
+// before invoking their unlisten handles, preventing a race where cleanup
+// runs before the listen() promises resolve.
+export function setupTrayListeners(): () => Promise<void> {
+  const listenerPromises: Promise<() => void>[] = [];
 
-  listen('new-note', () => {
-    const date = get(currentDate);
-    const note = createNote('', date);
-    addNote(note);
-  }).then((unlisten) => unlisteners.push(unlisten));
+  listenerPromises.push(
+    listen('new-note', () => {
+      const date = get(currentDate);
+      const note = createNote('', date);
+      addNote(note);
+    })
+  );
 
-  listen('go-to-today', () => {
-    navigateToToday();
-  }).then((unlisten) => unlisteners.push(unlisten));
+  listenerPromises.push(
+    listen('go-to-today', () => {
+      navigateToToday();
+    })
+  );
 
-  listen('open-settings', () => {
-    toggleSettings();
-  }).then((unlisten) => unlisteners.push(unlisten));
+  listenerPromises.push(
+    listen('open-settings', () => {
+      toggleSettings();
+    })
+  );
 
-  return () => {
+  return async () => {
+    const unlisteners = await Promise.all(listenerPromises);
     unlisteners.forEach((unlisten) => unlisten());
   };
 }

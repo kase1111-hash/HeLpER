@@ -128,9 +128,6 @@ describe('NatLangChain Service', () => {
     it('should fetch author stats', async () => {
       const mockStats = {
         totalEntries: 10,
-        totalEarnings: 0,
-        subscribers: 0,
-        views: 0,
       };
 
       mockInvoke.mockResolvedValueOnce(mockStats);

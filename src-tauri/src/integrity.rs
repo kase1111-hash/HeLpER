@@ -38,8 +38,14 @@ pub fn compute_hmac(data: &[u8], key: &[u8]) -> String {
 }
 
 /// Verify HMAC-SHA256 of data against an expected hex-encoded HMAC.
+/// Uses the `hmac` crate's constant-time `verify_slice` to prevent timing attacks.
 pub fn verify_hmac(data: &[u8], key: &[u8], expected_hex: &str) -> bool {
-    let computed = compute_hmac(data, key);
-    // Constant-time comparison
-    computed == expected_hex
+    let expected_bytes = match hex::decode(expected_hex) {
+        Ok(bytes) => bytes,
+        Err(_) => return false,
+    };
+    let mut mac = HmacSha256::new_from_slice(key)
+        .expect("HMAC can take key of any size");
+    mac.update(data);
+    mac.verify_slice(&expected_bytes).is_ok()
 }

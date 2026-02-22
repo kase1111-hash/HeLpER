@@ -362,6 +362,67 @@ pub async fn get_audit_log(
     }
 }
 
+/// Verify the integrity of the audit hash chain.
+/// Returns { valid, totalEntries, firstBrokenEntry }.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuditChainVerification {
+    pub valid: bool,
+    pub total_entries: u64,
+    pub first_broken_entry: Option<i64>,
+}
+
+#[tauri::command]
+pub async fn verify_audit_chain(
+    db: State<'_, DbPool>,
+) -> Result<AuditChainVerification, String> {
+    let pool = db.0.lock().await;
+
+    if let Some(pool) = pool.as_ref() {
+        let entries = sqlx::query_as!(
+            AuditEntry,
+            r#"
+            SELECT id, event_type, event_data, timestamp, hash
+            FROM audit_log
+            ORDER BY id ASC
+            "#
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        let total_entries = entries.len() as u64;
+        let mut prev_hash = "genesis".to_string();
+
+        for entry in &entries {
+            let mut hasher = Sha256::new();
+            hasher.update(&prev_hash);
+            hasher.update(&entry.event_type);
+            hasher.update(&entry.event_data);
+            hasher.update(&entry.timestamp);
+            let computed = format!("{:x}", hasher.finalize());
+
+            let stored = entry.hash.as_deref().unwrap_or("");
+            if computed != stored {
+                return Ok(AuditChainVerification {
+                    valid: false,
+                    total_entries,
+                    first_broken_entry: Some(entry.id),
+                });
+            }
+            prev_hash = computed;
+        }
+
+        Ok(AuditChainVerification {
+            valid: true,
+            total_entries,
+            first_broken_entry: None,
+        })
+    } else {
+        Err("Database not initialized".to_string())
+    }
+}
+
 // ========== Secret Storage Commands ==========
 
 /// Store a secret in the OS keychain

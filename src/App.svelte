@@ -26,7 +26,7 @@
   import { initializeWeather } from './lib/stores/weather';
   import { OLLAMA_HEALTH_CHECK_INTERVAL_MS, OLLAMA_RETRY_INTERVAL_MS } from './lib/constants';
 
-  let cleanupTrayListeners: (() => void) | null = null;
+  let cleanupTrayListeners: (() => Promise<void>) | null = null;
   let unsubscribeDate: (() => void) | null = null;
   let healthCheckInterval: ReturnType<typeof setInterval> | null = null;
   let showOnboarding = false;
@@ -83,30 +83,22 @@
   }
 
   function startHealthChecks() {
-    // Clear any existing interval
     if (healthCheckInterval) {
       clearInterval(healthCheckInterval);
     }
 
-    // Use shorter interval when disconnected, longer when connected
-    const updateInterval = () => {
+    // Single interval at the retry rate; skip checks when connected
+    // unless enough ticks have passed to match the longer health check interval.
+    const ratio = Math.max(1, Math.round(OLLAMA_HEALTH_CHECK_INTERVAL_MS / OLLAMA_RETRY_INTERVAL_MS));
+    let tickCount = 0;
+
+    healthCheckInterval = setInterval(async () => {
+      tickCount++;
       const status = get(ollamaStatus);
-      const interval = status.connected
-        ? OLLAMA_HEALTH_CHECK_INTERVAL_MS
-        : OLLAMA_RETRY_INTERVAL_MS;
-
-      if (healthCheckInterval) {
-        clearInterval(healthCheckInterval);
-      }
-
-      healthCheckInterval = setInterval(async () => {
-        await checkOllama();
-        // Adjust interval based on new connection status
-        updateInterval();
-      }, interval);
-    };
-
-    updateInterval();
+      // When connected, only check every `ratio` ticks (e.g. every 10th tick)
+      if (status.connected && tickCount % ratio !== 0) return;
+      await checkOllama();
+    }, OLLAMA_RETRY_INTERVAL_MS);
   }
 
   onMount(async () => {
