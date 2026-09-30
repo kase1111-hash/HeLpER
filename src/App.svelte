@@ -154,7 +154,7 @@
   <Calendar />
 
   <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col overflow-hidden p-3 gap-3">
+  <div class="flex-1 min-h-0 flex flex-col overflow-y-auto p-3 gap-3">
     <!-- Notes List -->
     <NotesList />
 

@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `suggestIntent` returned the generic daily-entry intent for almost every journal note because that check ran before the specific ones (learning, gratitude, goals, challenges)
 - `TitleBar` and tray listeners no longer throw when the Tauri runtime is absent, so the UI can render in a plain browser
 - Rust `cargo fmt` / `clippy -D warnings` violations
+- **Overlapping cards at small window sizes** - with the AI panel open, or at the 320x480 minimum window, the editor card was crushed and overlapped its neighbours; the main area now scrolls and the editor keeps a minimum height
+- **New notes did not take focus** - after "New Note" the editor is focused, so typing works immediately (previously a space re-pressed the button and created extra notes)
 
 ### Tests
 

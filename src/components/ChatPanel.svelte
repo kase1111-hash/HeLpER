@@ -180,7 +180,7 @@
   }
 </script>
 
-<div class="card">
+<div class="card shrink-0">
   <!-- Toggle Header -->
   <button
     on:click={toggleChatPanel}

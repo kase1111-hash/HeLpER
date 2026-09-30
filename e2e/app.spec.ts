@@ -137,7 +137,8 @@ test.describe('Notes (stubbed Tauri backend)', () => {
     expect(await ipcCalls(page, 'create_note')).toBe(2);
 
     // Typing must stick (a two-way binding once reset the textarea on every keystroke)...
-    await editor.click();
+    // The editor takes focus on its own, so the user can type straight away
+    await expect(editor).toBeFocused();
     await page.keyboard.type('Dear diary, today went well.');
     await expect(editor).toHaveValue('Dear diary, today went well.');
 
@@ -145,6 +146,37 @@ test.describe('Notes (stubbed Tauri backend)', () => {
     await expect.poll(() => ipcCalls(page, 'update_note')).toBeGreaterThan(0);
     await expect(editor).toHaveValue('Dear diary, today went well.');
   });
+});
+
+test.describe('Layout (stubbed Tauri backend)', () => {
+  // tauri.conf.json minWidth/minHeight
+  for (const [name, size] of [
+    ['minimum window', { width: 320, height: 480 }],
+    ['default window', { width: 400, height: 600 }],
+  ] as const) {
+    test(`cards never overlap at the ${name} size, even with the AI panel open`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(size);
+      await mockTauriBackend(page);
+      await page.goto('/');
+      await completeOnboarding(page);
+      await page.getByText('AI Assistant').first().click();
+
+      const overlaps = await page.evaluate(() => {
+        const rects = [...document.querySelectorAll('.card')].map((e) => e.getBoundingClientRect());
+        return rects.filter((r, i) => i < rects.length - 1 && r.bottom > rects[i + 1].top + 1).length;
+      });
+      expect(overlaps).toBe(0);
+      // The search box must not be squeezed out of (clipped by) its own card
+      const clipped = await page.evaluate(() => {
+        const input = document.querySelector('input[placeholder*="Search"]')!;
+        const card = input.closest('.card')!;
+        return input.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom;
+      });
+      expect(clipped).toBe(false);
+    });
+  }
 });
 
 test.describe('Settings Panel', () => {

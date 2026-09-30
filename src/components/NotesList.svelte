@@ -57,7 +57,7 @@
     : $currentNotes;
 </script>
 
-<div class="card max-h-48 overflow-y-auto">
+<div class="card shrink-0 max-h-48 overflow-y-auto">
   <!-- Search Input -->
   <div class="relative mb-2">
     <svg

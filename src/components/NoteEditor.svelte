@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import { selectedNote, updateNote } from '../lib/stores/notes';
   import { updateNoteContent } from '../lib/utils/note';
   import { NOTE_MAX_LENGTH, AUTO_SAVE_DEBOUNCE_MS } from '../lib/constants';
@@ -19,6 +19,8 @@
   let saveTimeout: ReturnType<typeof setTimeout> | null = null;
   let publishPanelOpen = false;
   let isMounted = true;
+  let textareaEl: HTMLTextAreaElement | undefined;
+  let lastNoteId: string | null = null;
 
   // Cleanup on component destroy
   onDestroy(() => {
@@ -34,6 +36,15 @@
     content = $selectedNote.content;
   } else {
     content = '';
+  }
+
+  // Focus the editor when a new, empty note is selected so the user can start typing
+  // immediately (otherwise focus stays on the "New Note" button and a space re-presses it).
+  $: if (($selectedNote?.id ?? null) !== lastNoteId) {
+    lastNoteId = $selectedNote?.id ?? null;
+    if ($selectedNote && !$selectedNote.content) {
+      tick().then(() => textareaEl?.focus());
+    }
   }
 
   function handleInput(event: Event) {
@@ -81,7 +92,7 @@
   $: charPercentage = (charCount / NOTE_MAX_LENGTH) * 100;
 </script>
 
-<div class="card flex-1 flex flex-col min-h-0">
+<div class="card flex-1 flex flex-col min-h-[13rem]">
   {#if $selectedNote}
     <!-- Journal Context Panel -->
     <div class="mb-3">
@@ -92,6 +103,7 @@
          above, and Svelte 4 makes a two-way binding re-run that block on every keystroke,
          resetting the textarea to the saved note text and discarding what was just typed. -->
     <textarea
+      bind:this={textareaEl}
       value={content}
       on:input={handleInput}
       class="flex-1 w-full resize-none bg-transparent text-note-body text-earth-100 focus:outline-none placeholder-earth-500 leading-relaxed"
