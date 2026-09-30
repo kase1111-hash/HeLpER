@@ -1,7 +1,5 @@
-use chrono::Utc;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::time::Duration;
 
 const API_TIMEOUT_SECS: u64 = 30;
@@ -105,14 +103,17 @@ struct ApiEntryRequest {
     public_key: Option<String>,
 }
 
-// NatLangChain validation response structures
+// NatLangChain validation response structures.
+// These mirror the remote API's JSON, so some fields are deserialized but not read.
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ApiSymbolicValidation {
     valid: bool,
     issues: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ApiLlmValidationInner {
     paraphrase: Option<String>,
     intent_match: Option<bool>,
@@ -122,6 +123,7 @@ struct ApiLlmValidationInner {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ApiLlmValidation {
     status: Option<String>,
     validation: Option<ApiLlmValidationInner>,
@@ -136,6 +138,7 @@ struct ApiValidationResponse {
 
 // NatLangChain publish response structures
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ApiEntryInfo {
     status: Option<String>,
     message: Option<String>,
@@ -156,17 +159,10 @@ struct ApiPublishResponse {
 
 // NatLangChain author entries response
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ApiAuthorEntriesResponse {
     author: Option<String>,
     count: Option<u64>,
-}
-
-// NatLangChain global stats response
-#[derive(Debug, Deserialize)]
-struct ApiGlobalStatsResponse {
-    total_entries: Option<u64>,
-    validated_entries: Option<u64>,
-    unique_authors: Option<u64>,
 }
 
 /// Build metadata JSON from entry for NatLangChain API
@@ -179,22 +175,43 @@ fn build_metadata(entry: &NatLangChainEntry) -> Option<serde_json::Value> {
     if let Some(tags) = &entry.tags {
         metadata.insert("tags".to_string(), serde_json::json!(tags));
     }
-    metadata.insert("content_type".to_string(), serde_json::json!(&entry.content_type));
-    metadata.insert("monetization".to_string(), serde_json::json!(&entry.monetization));
+    metadata.insert(
+        "content_type".to_string(),
+        serde_json::json!(&entry.content_type),
+    );
+    metadata.insert(
+        "monetization".to_string(),
+        serde_json::json!(&entry.monetization),
+    );
     if let Some(price) = entry.price {
         metadata.insert("price".to_string(), serde_json::json!(price));
     }
-    metadata.insert("visibility".to_string(), serde_json::json!(&entry.visibility));
+    metadata.insert(
+        "visibility".to_string(),
+        serde_json::json!(&entry.visibility),
+    );
     if let Some(context) = &entry.context {
-        metadata.insert("context".to_string(), serde_json::to_value(context).unwrap_or_default());
+        metadata.insert(
+            "context".to_string(),
+            serde_json::to_value(context).unwrap_or_default(),
+        );
     }
     if let Some(story) = &entry.story_metadata {
-        metadata.insert("story_metadata".to_string(), serde_json::to_value(story).unwrap_or_default());
+        metadata.insert(
+            "story_metadata".to_string(),
+            serde_json::to_value(story).unwrap_or_default(),
+        );
     }
     if let Some(article) = &entry.article_metadata {
-        metadata.insert("article_metadata".to_string(), serde_json::to_value(article).unwrap_or_default());
+        metadata.insert(
+            "article_metadata".to_string(),
+            serde_json::to_value(article).unwrap_or_default(),
+        );
     }
-    metadata.insert("created_at".to_string(), serde_json::json!(&entry.created_at));
+    metadata.insert(
+        "created_at".to_string(),
+        serde_json::json!(&entry.created_at),
+    );
     if let Some(provenance) = &entry.ai_provenance {
         metadata.insert("ai_provenance".to_string(), serde_json::json!(provenance));
     }
@@ -247,13 +264,15 @@ pub async fn validate_entry(
         .map_err(|e| format!("Failed to parse validation response: {}", e))?;
 
     // Parse NatLangChain response format
-    let valid = api_response.overall_decision
+    let valid = api_response
+        .overall_decision
         .as_ref()
         .map(|d| d == "VALID")
         .unwrap_or(false);
 
     // Extract intent from LLM validation paraphrase
-    let intent_detected = api_response.llm_validation
+    let intent_detected = api_response
+        .llm_validation
         .as_ref()
         .and_then(|v| v.validation.as_ref())
         .and_then(|v| v.paraphrase.clone())
@@ -268,20 +287,31 @@ pub async fn validate_entry(
     }
 
     // Collect ambiguities as suggestions
-    let suggestions = api_response.llm_validation
+    let suggestions = api_response
+        .llm_validation
         .as_ref()
         .and_then(|v| v.validation.as_ref())
         .and_then(|v| v.ambiguities.clone());
 
     // Calculate clarity score from validation results
-    let clarity_score = if valid { 1.0 } else if warnings.is_empty() { 0.7 } else { 0.4 };
+    let clarity_score = if valid {
+        1.0
+    } else if warnings.is_empty() {
+        0.7
+    } else {
+        0.4
+    };
 
     Ok(ValidationResult {
         valid,
         clarity_score,
         intent_detected,
         suggestions,
-        warnings: if warnings.is_empty() { None } else { Some(warnings) },
+        warnings: if warnings.is_empty() {
+            None
+        } else {
+            Some(warnings)
+        },
     })
 }
 
@@ -333,18 +363,24 @@ pub async fn publish_entry(
         .map_err(|e| format!("Failed to parse publish response: {}", e))?;
 
     // NatLangChain returns status: "success" or "failure"
-    let success = api_response.status
+    let success = api_response
+        .status
         .as_ref()
         .map(|s| s == "success")
         .unwrap_or(false);
 
     // Extract entry timestamp as a pseudo-ID if available
-    let entry_id = api_response.entry
+    let entry_id = api_response
+        .entry
         .as_ref()
         .and_then(|e| e.timestamp.clone());
 
     let transaction_url = entry_id.as_ref().map(|_| {
-        format!("{}/entries/author/{}", api_url.trim_end_matches('/'), entry.author)
+        format!(
+            "{}/entries/author/{}",
+            api_url.trim_end_matches('/'),
+            entry.author
+        )
     });
 
     Ok(PublishResult {
@@ -359,10 +395,7 @@ pub async fn publish_entry(
 /// Get author stats from the chain
 /// Note: NatLangChain doesn't track earnings/subscribers/views - these are HeLpER-specific
 /// The API only provides entry count for the author
-pub async fn get_author_stats(
-    api_url: &str,
-    author_id: &str,
-) -> Result<ChainStats, String> {
+pub async fn get_author_stats(api_url: &str, author_id: &str) -> Result<ChainStats, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(API_TIMEOUT_SECS))
         .redirect(reqwest::redirect::Policy::none())
@@ -383,9 +416,7 @@ pub async fn get_author_stats(
         .map_err(|e| format!("Stats request failed: {}", e))?;
 
     if !response.status().is_success() {
-        return Ok(ChainStats {
-            total_entries: 0,
-        });
+        return Ok(ChainStats { total_entries: 0 });
     }
 
     let api_response: ApiAuthorEntriesResponse = response
@@ -411,40 +442,5 @@ pub async fn check_connection(api_url: &str) -> Result<bool, String> {
     match client.get(&url).send().await {
         Ok(response) => Ok(response.status().is_success()),
         Err(_) => Ok(false),
-    }
-}
-
-/// Create an entry with current timestamp
-pub fn create_entry(
-    author: String,
-    content: String,
-    intent: String,
-    title: Option<String>,
-    tags: Option<Vec<String>>,
-    content_type: String,
-    monetization: String,
-    price: Option<f64>,
-    visibility: String,
-    context: Option<EntryContext>,
-    story_metadata: Option<StoryMetadata>,
-    article_metadata: Option<ArticleMetadata>,
-) -> NatLangChainEntry {
-    NatLangChainEntry {
-        author,
-        content,
-        intent,
-        title,
-        tags,
-        content_type,
-        monetization,
-        price,
-        visibility,
-        context,
-        story_metadata,
-        article_metadata,
-        created_at: Utc::now().to_rfc3339(),
-        ai_provenance: None,
-        signature: None,
-        public_key: None,
     }
 }

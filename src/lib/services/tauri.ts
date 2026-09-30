@@ -220,27 +220,27 @@ export async function signEntry(content: string): Promise<string | null> {
 // before invoking their unlisten handles, preventing a race where cleanup
 // runs before the listen() promises resolve.
 export function setupTrayListeners(): () => Promise<void> {
-  const listenerPromises: Promise<() => void>[] = [];
+  // listen() rejects outside the Tauri shell (plain browser, e2e). Degrade to a no-op unlisten
+  // so neither registration nor cleanup throws.
+  const register = (event: string, handler: () => void): Promise<() => void> =>
+    listen(event, handler).catch((error) => {
+      console.warn(`Failed to register '${event}' listener:`, error);
+      return () => {};
+    });
 
-  listenerPromises.push(
-    listen('new-note', () => {
+  const listenerPromises: Promise<() => void>[] = [
+    register('new-note', () => {
       const date = get(currentDate);
       const note = createNote('', date);
       addNote(note);
-    })
-  );
-
-  listenerPromises.push(
-    listen('go-to-today', () => {
+    }),
+    register('go-to-today', () => {
       navigateToToday();
-    })
-  );
-
-  listenerPromises.push(
-    listen('open-settings', () => {
+    }),
+    register('open-settings', () => {
       toggleSettings();
-    })
-  );
+    }),
+  ];
 
   return async () => {
     const unlisteners = await Promise.all(listenerPromises);

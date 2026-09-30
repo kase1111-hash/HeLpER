@@ -33,6 +33,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weather API requests use `.query()` builder instead of URL string formatting
 - Notes database schema includes `ai_provenance` column
 
+### Fixed
+
+- **Note editor discarded typing** - the textarea used `bind:value` on a variable that is also assigned in a `$:` sync block, so Svelte reset it to the saved note text on every keystroke; it now uses one-way `value` with the existing `on:input` handler
+- **Rust backend did not compile**
+  - `sqlx::query!`/`query_as!` macros needed a build-time `DATABASE_URL`; replaced with runtime `query`/`query_as` (SQL unchanged)
+  - `tray.rs` was missing `use tauri::Emitter`; `delete_secret` called `delete_credential`, which does not exist in `keyring` 2 (`delete_password`)
+  - `src-tauri/icons/` was empty, which fails `tauri::generate_context!`; added placeholder icons (replace with real artwork via `npm run tauri icon <source.png>`)
+  - Committed `Cargo.lock` was missing the crypto crates added in the security remediation
+- **CI never ran** - the workflow referenced a non-existent action (`dtolnay/rust-action`); now `dtolnay/rust-toolchain`. CI also runs `cargo test` and clippy on test targets
+- `suggestIntent` returned the generic daily-entry intent for almost every journal note because that check ran before the specific ones (learning, gratitude, goals, challenges)
+- `TitleBar` and tray listeners no longer throw when the Tauri runtime is absent, so the UI can render in a plain browser
+- Rust `cargo fmt` / `clippy -D warnings` violations
+
+### Tests
+
+- Added Rust unit tests: note CRUD and soft delete, SQL parameter binding, audit hash chain and tamper detection, schema migration, HMAC (RFC 4231 vector), Ed25519 signing
+- Fixed stale `publishEntry` tests and added coverage for signing, audit logging and secret blocking
+- Repaired the Playwright e2e suite (onboarding wizard handling, ambiguous locators) and added a typing/auto-save regression test
+
 ## [0.1.0-alpha] - 2026-01-22
 
 ### Added

@@ -88,8 +88,11 @@
       <JournalContext />
     </div>
 
+    <!-- One-way `value` + on:input, not bind:value. `content` is assigned in the `$:` sync block
+         above, and Svelte 4 makes a two-way binding re-run that block on every keystroke,
+         resetting the textarea to the saved note text and discarding what was just typed. -->
     <textarea
-      bind:value={content}
+      value={content}
       on:input={handleInput}
       class="flex-1 w-full resize-none bg-transparent text-note-body text-earth-100 focus:outline-none placeholder-earth-500 leading-relaxed"
       placeholder="Start writing your thoughts..."

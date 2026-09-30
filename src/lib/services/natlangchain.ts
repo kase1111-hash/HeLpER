@@ -320,10 +320,9 @@ export function suggestIntent(content: string, contentType?: ContentType): strin
     return 'Reporting news and informing readers';
   }
 
-  // Journal intents (original logic)
-  if (lowerContent.includes('today i') || lowerContent.includes('this morning')) {
-    return 'Sharing a daily journal entry and personal reflection';
-  }
+  // Journal intents. Specific themes are checked first; the generic daily-entry opener
+  // ("today i", "this morning") matches most diary entries, so it must come last or it
+  // would shadow every other journal intent.
   if (lowerContent.includes('learned') || lowerContent.includes('realized')) {
     return 'Documenting a learning experience or insight';
   }
@@ -335,6 +334,9 @@ export function suggestIntent(content: string, contentType?: ContentType): strin
   }
   if (lowerContent.includes('struggle') || lowerContent.includes('difficult')) {
     return 'Processing challenges and seeking clarity';
+  }
+  if (lowerContent.includes('today i') || lowerContent.includes('this morning')) {
+    return 'Sharing a daily journal entry and personal reflection';
   }
 
   return 'Sharing personal thoughts and experiences';

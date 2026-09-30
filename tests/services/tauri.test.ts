@@ -8,11 +8,13 @@ import {
   deleteNoteFromDb,
   checkOllamaStatus,
   sendChatMessage,
+  setupTrayListeners,
 } from '../../src/lib/services/tauri';
 import type { Note, ChatMessage } from '../../src/lib/types';
 
 // Mock is set up in setup.ts
 const mockInvoke = invoke as ReturnType<typeof vi.fn>;
+const mockListen = listen as ReturnType<typeof vi.fn>;
 
 describe('Tauri Service', () => {
   beforeEach(() => {
@@ -193,6 +195,33 @@ describe('Tauri Service', () => {
       );
 
       expect(response).toBeNull();
+    });
+  });
+  describe('setupTrayListeners', () => {
+    it('should register the tray event listeners and unlisten them on cleanup', async () => {
+      const unlisten = vi.fn();
+      mockListen.mockResolvedValue(unlisten);
+
+      const cleanup = setupTrayListeners();
+      expect(mockListen.mock.calls.map((call) => call[0])).toEqual([
+        'new-note',
+        'go-to-today',
+        'open-settings',
+      ]);
+
+      await cleanup();
+      expect(unlisten).toHaveBeenCalledTimes(3);
+    });
+
+    it('should not throw when listener registration fails (e.g. outside Tauri)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      mockListen.mockRejectedValue(new TypeError('no Tauri runtime'));
+
+      const cleanup = setupTrayListeners();
+
+      await expect(cleanup()).resolves.toBeUndefined();
+      expect(warn).toHaveBeenCalledTimes(3);
+      warn.mockRestore();
     });
   });
 });

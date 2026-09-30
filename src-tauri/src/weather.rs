@@ -2,7 +2,6 @@ use chrono::{Local, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use urlencoding::encode;
 
 const WEATHER_API_TIMEOUT_SECS: u64 = 10;
 const WEATHERAPI_BASE_URL: &str = "https://api.weatherapi.com/v1";
@@ -45,6 +44,7 @@ struct WeatherApiResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct WeatherApiLocation {
     name: String,
     region: String,
@@ -75,6 +75,7 @@ struct WeatherApiCondition {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct IpApiResponse {
     city: Option<String>,
     country: Option<String>,
@@ -90,9 +91,11 @@ fn map_condition_code(code: i32) -> String {
         1006 | 1009 => "cloudy".to_string(),
         1030 | 1135 | 1147 => "fog".to_string(),
         1063 | 1150 | 1153 | 1168 | 1171 => "drizzle".to_string(),
-        1066 | 1069 | 1072 | 1114 | 1117 | 1210 | 1213 | 1216 | 1219 | 1222 | 1225 | 1237 | 1255 | 1258 | 1261 | 1264 => "snow".to_string(),
+        1066 | 1069 | 1072 | 1114 | 1117 | 1210 | 1213 | 1216 | 1219 | 1222 | 1225 | 1237
+        | 1255 | 1258 | 1261 | 1264 => "snow".to_string(),
         1087 | 1273 | 1276 | 1279 | 1282 => "thunderstorm".to_string(),
-        1180 | 1183 | 1186 | 1189 | 1192 | 1195 | 1198 | 1201 | 1204 | 1207 | 1240 | 1243 | 1246 | 1249 | 1252 => "rain".to_string(),
+        1180 | 1183 | 1186 | 1189 | 1192 | 1195 | 1198 | 1201 | 1204 | 1207 | 1240 | 1243
+        | 1246 | 1249 | 1252 => "rain".to_string(),
         _ => "unknown".to_string(),
     }
 }
@@ -146,10 +149,7 @@ pub async fn fetch_weather(api_key: &str, location: &str) -> Result<WeatherData,
     // NOTE: WeatherAPI.com only supports API key via query parameter (no header auth available).
     // Mitigations: HTTPS enforced via WEATHERAPI_BASE_URL encrypts the key in transit;
     // the key is stored in the OS keychain rather than plaintext settings to limit exposure.
-    let url = format!(
-        "{}/current.json",
-        WEATHERAPI_BASE_URL
-    );
+    let url = format!("{}/current.json", WEATHERAPI_BASE_URL);
 
     let response = client
         .get(&url)

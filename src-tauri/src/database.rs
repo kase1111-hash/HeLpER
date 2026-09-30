@@ -43,7 +43,7 @@ pub async fn initialize_into(app_handle: &AppHandle) -> Result<(), Box<dyn std::
 }
 
 /// Create database tables if they don't exist
-async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
+pub(crate) async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     // Notes table
     sqlx::query(
         r#"
@@ -136,11 +136,10 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     .await?;
 
     // Migration: add ai_provenance column to notes table if not present
-    let columns: Vec<(String,)> = sqlx::query_as(
-        "SELECT name FROM pragma_table_info('notes') WHERE name = 'ai_provenance'"
-    )
-    .fetch_all(pool)
-    .await?;
+    let columns: Vec<(String,)> =
+        sqlx::query_as("SELECT name FROM pragma_table_info('notes') WHERE name = 'ai_provenance'")
+            .fetch_all(pool)
+            .await?;
 
     if columns.is_empty() {
         sqlx::query("ALTER TABLE notes ADD COLUMN ai_provenance TEXT DEFAULT 'human'")
