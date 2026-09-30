@@ -1,7 +1,7 @@
 use tauri::{
-    tray::{TrayIcon, TrayIconBuilder, MouseButton, MouseButtonState},
     menu::{Menu, MenuItem},
-    AppHandle, Manager,
+    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder},
+    AppHandle, Emitter, Manager,
 };
 
 /// Create and configure the system tray
@@ -30,12 +30,14 @@ pub fn create_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Erro
 
     // Build tray icon
     let tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon()
-            .ok_or_else(|| "Default window icon not found")?
-            .clone())
+        .icon(
+            app.default_window_icon()
+                .ok_or("Default window icon not found")?
+                .clone(),
+        )
         .tooltip("HeLpER")
         .menu(&menu)
-        .menu_on_left_click(false)
+        .show_menu_on_left_click(false)
         .on_menu_event(|app, event| {
             match event.id.as_ref() {
                 "open" => {
