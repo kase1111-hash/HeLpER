@@ -1,18 +1,18 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
 
-  const appWindow = getCurrentWindow();
-
+  // Resolve the window lazily: getCurrentWindow() throws outside the Tauri shell (plain browser,
+  // e2e runs), and doing it at component init would stop the whole app from mounting.
   async function minimize() {
-    await appWindow.minimize();
+    await getCurrentWindow().minimize();
   }
 
   async function toggleMaximize() {
-    await appWindow.toggleMaximize();
+    await getCurrentWindow().toggleMaximize();
   }
 
   async function close() {
-    await appWindow.close();
+    await getCurrentWindow().close();
   }
 </script>
 

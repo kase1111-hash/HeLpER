@@ -77,50 +77,122 @@ describe('NatLangChain Service', () => {
   });
 
   describe('publishEntry', () => {
-    it('should publish an entry successfully', async () => {
-      const mockResult = {
-        success: true,
-        entryId: 'entry-123',
-        blockHash: 'hash-456',
-      };
+    const baseEntry: NatLangChainEntry = {
+      author: 'test-author',
+      content: 'Test content',
+      intent: 'Sharing thoughts',
+      contentType: 'journal',
+      monetization: 'free',
+      visibility: 'public',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    };
 
-      mockInvoke.mockResolvedValueOnce(mockResult);
+    // publishEntry makes several IPC calls (sign, public key, publish, audit log), so route
+    // the mock by command name rather than by call order.
+    function mockIpc(handlers: Record<string, unknown | (() => unknown)>) {
+      mockInvoke.mockImplementation(async (command: string) => {
+        const handler = handlers[command];
+        if (typeof handler === 'function') return handler();
+        return handler;
+      });
+    }
 
-      const entry: NatLangChainEntry = {
-        author: 'test-author',
-        content: 'Test content',
-        intent: 'Sharing thoughts',
-        contentType: 'journal',
-        monetization: 'free',
-        visibility: 'public',
-        createdAt: new Date().toISOString(),
-      };
+    it('should sign and publish an entry successfully', async () => {
+      mockIpc({
+        nlc_sign_entry: 'sig-abc',
+        nlc_get_author_public_key: 'pub-xyz',
+        nlc_publish_entry: { success: true, entryId: 'entry-123', blockHash: 'hash-456' },
+        log_audit_event: undefined,
+      });
 
-      const result = await publishEntry('http://localhost:5000', entry);
+      const result = await publishEntry('http://localhost:5000', baseEntry);
 
+      expect(mockInvoke).toHaveBeenCalledWith('nlc_sign_entry', { content: 'Test content' });
       expect(mockInvoke).toHaveBeenCalledWith('nlc_publish_entry', {
         apiUrl: 'http://localhost:5000',
-        entry,
+        entry: { ...baseEntry, signature: 'sig-abc', publicKey: 'pub-xyz' },
       });
+      expect(result).toEqual({ success: true, entryId: 'entry-123', blockHash: 'hash-456' });
+    });
+
+    it('should write an audit event after a successful publish', async () => {
+      mockIpc({
+        nlc_sign_entry: 'sig-abc',
+        nlc_get_author_public_key: 'pub-xyz',
+        nlc_publish_entry: { success: true, entryId: 'entry-123', blockHash: 'hash-456' },
+        log_audit_event: undefined,
+      });
+
+      await publishEntry('http://localhost:5000', baseEntry);
+
+      expect(mockInvoke).toHaveBeenCalledWith('log_audit_event', {
+        eventType: 'nlc_publish',
+        eventData: JSON.stringify({
+          entryId: 'entry-123',
+          blockHash: 'hash-456',
+          author: 'test-author',
+        }),
+      });
+    });
+
+    it('should not write an audit event when the publish is unsuccessful', async () => {
+      mockIpc({
+        nlc_sign_entry: 'sig-abc',
+        nlc_get_author_public_key: 'pub-xyz',
+        nlc_publish_entry: { success: false, error: 'rejected' },
+      });
+
+      const result = await publishEntry('http://localhost:5000', baseEntry);
+
+      expect(result.success).toBe(false);
+      expect(mockInvoke).not.toHaveBeenCalledWith('log_audit_event', expect.anything());
+    });
+
+    it('should still publish unsigned when signing fails', async () => {
+      mockIpc({
+        nlc_sign_entry: () => {
+          throw new Error('keychain unavailable');
+        },
+        nlc_get_author_public_key: () => {
+          throw new Error('keychain unavailable');
+        },
+        nlc_publish_entry: { success: true, entryId: 'entry-1', blockHash: 'hash-1' },
+        log_audit_event: undefined,
+      });
+
+      const result = await publishEntry('http://localhost:5000', baseEntry);
+
       expect(result.success).toBe(true);
+      expect(mockInvoke).toHaveBeenCalledWith('nlc_publish_entry', {
+        apiUrl: 'http://localhost:5000',
+        entry: { ...baseEntry, signature: undefined, publicKey: undefined },
+      });
     });
 
     it('should return error result on failure', async () => {
-      mockInvoke.mockRejectedValueOnce(new Error('Publish failed'));
+      mockIpc({
+        nlc_sign_entry: 'sig-abc',
+        nlc_get_author_public_key: 'pub-xyz',
+        nlc_publish_entry: () => {
+          throw new Error('Publish failed');
+        },
+      });
 
-      const entry: NatLangChainEntry = {
-        author: 'test',
-        content: 'Test',
-        intent: 'Test',
-        contentType: 'journal',
-        monetization: 'free',
-        visibility: 'public',
-        createdAt: new Date().toISOString(),
-      };
+      const result = await publishEntry('http://localhost:5000', baseEntry);
 
-      const result = await publishEntry('http://localhost:5000', entry);
       expect(result.success).toBe(false);
       expect(result.error).toContain('Publish failed');
+    });
+
+    it('should block publishing content that contains secrets', async () => {
+      const result = await publishEntry('http://localhost:5000', {
+        ...baseEntry,
+        content: 'My key is AKIAIOSFODNN7EXAMPLE',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('AWS Access Key');
+      expect(mockInvoke).not.toHaveBeenCalled();
     });
   });
 
@@ -317,6 +389,15 @@ describe('NatLangChain Service', () => {
     it('should suggest intent for journal content', () => {
       const intent = suggestIntent('Today I learned something new', 'journal');
       expect(intent).toContain('learning');
+    });
+
+    it('should prefer specific journal themes over the generic daily-entry intent', () => {
+      expect(suggestIntent('Today I am grateful for my family', 'journal')).toContain('gratitude');
+      expect(suggestIntent('This morning I set a goal for the year', 'journal')).toContain('goals');
+    });
+
+    it('should fall back to the daily-entry intent for plain daily journal content', () => {
+      expect(suggestIntent('Today I went to the store', 'journal')).toContain('daily journal');
     });
 
     it('should suggest intent for article content', () => {
